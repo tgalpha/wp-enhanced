@@ -1,4 +1,3 @@
-import logging
 import os.path as osp
 from distutils.dir_util import copy_tree
 from distutils.file_util import copy_file
@@ -9,8 +8,6 @@ __all__ = [
     'overwrite_copy',
     'path_is_under'
 ]
-
-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 
 def overwrite_copy(src: str, dst: str):

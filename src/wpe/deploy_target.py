@@ -23,7 +23,7 @@ class DeployTarget:
     def create(self):
         while True:
             name = input('Target name: ')
-            if name not in self.deployTargetConfig.keys():
+            if name and name not in self.deployTargetConfig.keys():
                 break
             logging.warning(f'Target exists: {name}')
 
@@ -64,3 +64,11 @@ class DeployTarget:
 
     def save(self):
         util.save_json(self.deployTargetConfigPath, self.deployTargetConfig)
+        self._lazy_create_config_gitignore()
+
+    def _lazy_create_config_gitignore(self):
+        if osp.isfile(ignore_file := osp.join(self.pathMan.configDir, '.gitignore')):
+            return
+
+        logging.info(f'Creating .gitignore for config directory: {ignore_file}')
+        util.save_text(ignore_file, '.deploy_target.json')
