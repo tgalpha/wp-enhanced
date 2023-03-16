@@ -9,6 +9,8 @@ packages = [
     { include = "wpe", from = "src" }
 ]
 
+repository = "https://github.com/tgalpha/wp-enhanced"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 kkpyutil = "^0.115.2"

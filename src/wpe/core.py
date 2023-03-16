@@ -61,14 +61,8 @@ class Worker:
             [
                 'python',
                 self.wpScript,
-                'build',
-                'Authoring',
-                '-c',
-                self.args.configuration,
-                '-x',
-                'x64',
-                '-t',
-                'vc160'
+                'premake',
+                'Authoring'
             ],
             cwd=self.pathMan.root
         )
