@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "wp-enhanced"
+version = "0.1.0"
+description = "Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins."
+authors = ["tgalpha <tanalpha.zhy@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "wpe", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+kkpyutil = "^0.115.2"
+
+
+[tool.poetry.scripts]
+wpe = "wpe.cli:main"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
