@@ -12,6 +12,26 @@ def main():
     )
 
     parser.add_argument(
+        '--wp',
+        action='store',
+        dest='wp',
+        nargs='*',
+        default=[],
+        required=False,
+        help='Pass arguments to wp.py. Example: --wp new'
+    )
+
+    parser.add_argument(
+        '-n',
+        '--new',
+        action='store_true',
+        dest='new',
+        default=False,
+        required=False,
+        help='Create a new plugin project.'
+    )
+
+    parser.add_argument(
         '-p',
         '--premake',
         action='store_true',
@@ -51,10 +71,10 @@ def main():
         help='Terminate Wwise process and copy plugin files, then reopen Wwise.'
     )
     parser.add_argument(
-        '-n',
-        '--new-deploy-target',
+        '-C',
+        '--create-deploy-target',
         action='store_true',
-        dest='newDeployTarget',
+        dest='createDeployTarget',
         required=False,
         default=False,
         help='Create a new deploy target with interactive commandline.'
