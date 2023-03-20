@@ -124,7 +124,7 @@ class WindowsWorker(Worker):
     def _build(self):
         super()._build()
         logging.info('Build shared plugin')
-        self.wpWrapper.build('Shared', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
+        self.wpWrapper.build('Windows_vc160', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
 
     def _terminate_wwise(self):
         if self.args.forceCopyFile:
