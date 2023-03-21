@@ -104,7 +104,7 @@ def main():
         dest='enableCpp17',
         required=False,
         default=False,
-        help='Change premake cppdialect to c++17 in global premakePlugin.lua. Will leave a backup file in the same directory(%WWISEROOT%\\Scripts\\Build\\Plugins).'
+        help='Change premake cppdialect to c++17 in global premakePlugin.lua. Will leave a backup file in the same directory(%%WWISEROOT%%\\Scripts\\Build\\Plugins).'
     )
 
     parsed_args = parser.parse_args()
