@@ -31,3 +31,8 @@ class PathMan:
         for line in lines:
             if matched := re.match(name_define_pattern, line):
                 return matched.group().split('"')[1]
+
+    @staticmethod
+    def get_premake_template_path():
+        wpe_dir = osp.dirname(__file__)
+        return osp.join(wpe_dir, 'template', 'premakePlugins.lua')
