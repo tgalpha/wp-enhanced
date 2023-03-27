@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wp-enhanced"
-version = "0.3.2"
+version = "0.3.3"
 description = "Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins."
 authors = ["tgalpha <tanalpha.zhy@gmail.com>"]
 license = "MIT"
