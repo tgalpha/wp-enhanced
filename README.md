@@ -6,8 +6,15 @@ Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins.
     ```
     pip install wp-enhanced
     ```
-2. Set environment variables from wwise launcher
-3. Check installation
+2. Set wwise environment variables
+    - Windows:
+        - Set from Wwise Launcher
+    
+        ![image](https://user-images.githubusercontent.com/61353126/228009337-742b294a-a453-4134-9b3d-ed7c09f13049.png)
+    - MacOS:
+        - Set `WWISEROOT` and `WWISESDK` manually
+    
+4. Check installation
     ```
     wpe -h
     usage: Plugin dev ci build tool [-h] [--wp [WP ...]] [-n] [-p] [-b] [-c {Debug,Profile,Release}] [-f] [-C] [-l]
@@ -34,4 +41,3 @@ Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins.
     Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins.
     ```
 
-# Usage
