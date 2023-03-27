@@ -105,7 +105,7 @@ class Worker:
 
     def enable_cpp17(self):
         logging.info('Enable C++17')
-        template = self.pathMan.get_premake_template_path()
+        template = PathMan.get_premake_template_path()
         target = osp.abspath(osp.join(self.wpWrapper.wpScriptDir, 'premakePlugins.lua'))
         backup = target + '.bak'
         if osp.isfile(backup):
