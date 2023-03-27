@@ -23,7 +23,8 @@ class PathMan:
             if parent == self.root:
                 break
             self.root = parent
-        raise FileNotFoundError(f'Can not find PremakePlugin.lua in ancestor directories. cwd: {os.getcwd()}')
+        raise FileNotFoundError(f'Can not find PremakePlugin.lua in ancestor directories. '
+                                f'This command must be executed under a plugin directory. cwd: {os.getcwd()}')
 
     def parse_plugin_name(self):
         lines = util.load_lines(self.premakePluginLua, rmlineend=True)

@@ -41,6 +41,9 @@ class Worker:
         if self.args.new:
             return self.new()
 
+        if self.args.enableCpp17:
+            return self.enable_cpp17()
+
         self.pathMan = self.pathMan or PathMan()
         self.process_deploy_targets()
 
@@ -49,9 +52,6 @@ class Worker:
 
         if self.args.build:
             return self.build()
-
-        if self.args.enableCpp17:
-            return self.enable_cpp17()
 
     def process_deploy_targets(self):
         self.deployTarget = DeployTarget(path_man=self.pathMan)
