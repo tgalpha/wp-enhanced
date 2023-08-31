@@ -13,6 +13,7 @@ from wpe.util import *
 from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
 from wpe.deploy_target import DeployTarget
+from wpe.parameter import ParameterGenerator
 
 
 class Worker:
@@ -53,7 +54,11 @@ class Worker:
         if self.args.build:
             return self.build()
 
+        if self.args.generateParameters:
+            return self.generate_parameters()
+
     def process_deploy_targets(self):
+        # TODO: move to post-build script
         self.deployTarget = DeployTarget(path_man=self.pathMan)
 
         if self.args.createDeployTarget:
@@ -87,6 +92,10 @@ class Worker:
         self._apply_deploy_targets()
         self._reopen_wwise()
 
+    def generate_parameters(self):
+        parameter_manager = ParameterGenerator(self.pathMan)
+        parameter_manager.main()
+
     def _build(self):
         logging.info('Build authoring plugin')
         self.wpWrapper.build('Authoring', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
@@ -105,7 +114,7 @@ class Worker:
 
     def enable_cpp17(self):
         logging.info('Enable C++17')
-        template = PathMan.get_premake_template_path()
+        template = self.pathMan.get_premake_template_path()
         target = osp.abspath(osp.join(self.wpWrapper.wpScriptDir, 'premakePlugins.lua'))
         backup = target + '.bak'
         if osp.isfile(backup):

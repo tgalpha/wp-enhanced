@@ -11,7 +11,11 @@ class PathMan:
         self.premakePluginLua = self.find_premake_plugin_lua_in_ancestor_and_update_root()
         os.chdir(self.root)
         self.pluginName = self.parse_plugin_name()
+        self.pluginConfigHeader = osp.join(self.root, f'{self.pluginName}Config.h')
+        self.pluginId = self.parse_plugin_id()
         self.configDir = osp.join(self.root, '.wpe')
+        self.templatesDir = osp.join(osp.dirname(__file__), 'templates')
+        self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
 
     def find_premake_plugin_lua_in_ancestor_and_update_root(self):
         premake_script_filename = 'PremakePlugin.lua'
@@ -33,7 +37,13 @@ class PathMan:
             if matched := re.match(name_define_pattern, line):
                 return matched.group().split('"')[1]
 
-    @staticmethod
-    def get_premake_template_path():
-        wpe_dir = osp.dirname(__file__)
-        return osp.join(wpe_dir, 'template', 'premakePlugins.lua')
+    def parse_plugin_id(self):
+        lines = util.load_lines(self.pluginConfigHeader, rmlineend=True)
+        prefix = '    static const unsigned short PluginID = '
+        name_define_pattern = rf'{prefix}\d+'
+        for line in lines:
+            if matched := re.match(name_define_pattern, line):
+                return int(matched.group().lstrip(prefix))
+
+    def get_premake_template_path(self):
+        return osp.join(self.templatesDir, 'premakePlugins.lua')

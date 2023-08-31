@@ -11,7 +11,8 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )
 
-    parser.add_argument(
+    command_group = parser.add_mutually_exclusive_group()
+    command_group.add_argument(
         '--wp',
         action='store',
         dest='wp',
@@ -21,7 +22,7 @@ def main():
         help='Pass arguments to wp.py. Example: --wp new'
     )
 
-    parser.add_argument(
+    command_group.add_argument(
         '-n',
         '--new',
         action='store_true',
@@ -31,7 +32,7 @@ def main():
         help='Create a new plugin project.'
     )
 
-    parser.add_argument(
+    command_group.add_argument(
         '-p',
         '--premake',
         action='store_true',
@@ -41,7 +42,17 @@ def main():
         help='Premake authoring project.'
     )
 
-    parser.add_argument(
+    command_group.add_argument(
+        '-gp',
+        '--generate-parameters',
+        action='store_true',
+        dest='generateParameters',
+        default=False,
+        required=False,
+        help='Generate source code with parameters. Define parameters in `$PROJECT_ROOT/.wpe/wpe_parameters.toml`.'
+    )
+
+    command_group.add_argument(
         '-b',
         '--build',
         action='store_true',
@@ -70,7 +81,7 @@ def main():
         default=False,
         help='Terminate Wwise process and copy plugin files, then reopen Wwise.'
     )
-    parser.add_argument(
+    command_group.add_argument(
         '-C',
         '--create-deploy-target',
         action='store_true',
@@ -79,7 +90,7 @@ def main():
         default=False,
         help='Create a new deploy target with interactive commandline.'
     )
-    parser.add_argument(
+    command_group.add_argument(
         '-l',
         '--list-deploy-targets',
         action='store_true',
@@ -88,7 +99,7 @@ def main():
         default=False,
         help='List all deploy targets.'
     )
-    parser.add_argument(
+    command_group.add_argument(
         '-d',
         '--delete-deploy-target',
         action='store',
@@ -98,7 +109,7 @@ def main():
         help='Delete deploy targets by name.'
     )
 
-    parser.add_argument(
+    command_group.add_argument(
         '--enable-cpp17',
         action='store_true',
         dest='enableCpp17',
