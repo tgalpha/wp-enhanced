@@ -16,6 +16,7 @@ class PathMan:
         self.configDir = osp.join(self.root, '.wpe')
         self.templatesDir = osp.join(osp.dirname(__file__), 'templates')
         self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
+        self.docsDir = osp.join(self.root, 'WwisePlugin/res/Md')
 
     def find_premake_plugin_lua_in_ancestor_and_update_root(self):
         premake_script_filename = 'PremakePlugin.lua'

@@ -7,7 +7,11 @@ min_value = 0
 max_value = 100
 
 # Fields below are optional
-description = 'This is a description for this parameter'
+# Description displayed in Wwise UI. Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=effectplugin_tools_property_help.html
+description = [
+    {'launguage' = 'en', 'text' = 'This is a description for this parameter'},
+    {'launguage' = 'zh', 'text' = '这是一个参数的描述'}
+]
 # Name displayed in Wwise UI, default to auto generate title from snake_case_name. e.g. en_US => en US, this_is_title => This is Title
 display_name = 'Parameter Placeholder'
 # Only effective when type is 'int', options will mapped to 0, 1, 2, ...

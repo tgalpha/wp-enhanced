@@ -95,6 +95,7 @@ class Worker:
     def generate_parameters(self):
         parameter_manager = ParameterGenerator(self.pathMan)
         parameter_manager.main()
+        self.wpWrapper.build('Documentation')
 
     def _build(self):
         logging.info('Build authoring plugin')

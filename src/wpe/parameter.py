@@ -36,7 +36,7 @@ class Parameter:
     defaultValue: Any
     minValue: Any
     maxValue: Any
-    description: str = ''
+    description: list[dict] = field(default_factory=list)
     displayName: str = ''
     enumeration: list[str] = field(default_factory=list)
     userInterface: dict = field(default_factory=dict)
@@ -62,7 +62,7 @@ class Parameter:
             defaultValue=dict_define['default_value'],
             minValue=dict_define['min_value'],
             maxValue=dict_define['max_value'],
-            description=dict_define.get('description', ''),
+            description=dict_define.get('description', []),
             displayName=dict_define.get('display_name', ''),
             enumeration=dict_define.get('enumeration', []),
             userInterface=dict_define.get('user_interface', {})
@@ -109,6 +109,16 @@ class Parameter:
     </ValueRestriction>
   </Restrictions>
 </Property>'''.splitlines()
+
+    def dump_parameter_doc(self, docs_dir: str):
+        for lang in self.description:
+            output_path = osp.join(docs_dir, f'{lang["language"]}', f'{self.propertyName}.md')
+            doc_str = f'''##{self.displayName}
+
+{lang['text']}
+
+Range: {self.minValue} - {self.maxValue} <br/>'''
+            util.save_text(output_path, doc_str)
 
 
 class ParameterGenerator:
@@ -181,10 +191,15 @@ class ParameterGenerator:
             dst = _copy_template(target)
             util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->', '<!-- [/ParameterGui] -->')
 
+        def _generate_doc():
+            for param in self.parameters:
+                param.dump_parameter_doc(self.pathMan.docsDir)
+
         _generate_fx_params_cpp()
         _generate_fx_params_h()
         _generate_wwise_params_cpp()
         _generate_wwise_xml()
+        _generate_doc()
 
     def __generate_ids(self):
         lines = []
