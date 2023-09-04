@@ -1,7 +1,8 @@
 import copy
 import os.path as osp
-from typing import Any
+from typing import Any, Optional
 from dataclasses import dataclass, field
+import xml.etree.ElementTree as ET
 
 import kkpyutil as util
 
@@ -37,16 +38,22 @@ class Parameter:
     minValue: Any
     maxValue: Any
     description: list[dict] = field(default_factory=list)
+    dependencies: list[dict] = field(default_factory=list)
     displayName: str = ''
     enumeration: list[str] = field(default_factory=list)
     userInterface: dict = field(default_factory=dict)
     id: int = 0
 
     def __post_init__(self):
+        if self.type_ == 'bool':
+            self.defaultValue = str(self.defaultValue).lower()
+            self.minValue = 'false'
+            self.maxValue = 'true'
         self.propertyName = util.convert_compound_cases(self.name)
         self.cppVariableName = _type_prefix_map[self.type_] + self.propertyName
         self.paramIDName = f'PARAM_{self.name.upper()}_ID'
         self.typeName = _wwise_type_name_map[self.type_]
+        self.xmlTypeName = self.typeName.lstrip('Ak')
         self.struct = 'RTPC' if self.rtpc else 'NonRTPC'
         self.displayName = self.displayName or util.convert_compound_cases(self.name, style='title')
 
@@ -60,9 +67,10 @@ class Parameter:
             type_=dict_define['type'],
             rtpc=dict_define['rtpc'],
             defaultValue=dict_define['default_value'],
-            minValue=dict_define['min_value'],
-            maxValue=dict_define['max_value'],
+            minValue=dict_define.get('min_value', None),
+            maxValue=dict_define.get('max_value', None),
             description=dict_define.get('description', []),
+            dependencies=dict_define.get('dependencies', []),
             displayName=dict_define.get('display_name', ''),
             enumeration=dict_define.get('enumeration', []),
             userInterface=dict_define.get('user_interface', {})
@@ -93,21 +101,50 @@ class Parameter:
         return f'    in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, "{self.propertyName}"));'
 
     def generate_parameter_gui(self) -> list[str]:
-        xml_type_name = self.typeName.lstrip('Ak')
+        def _generate_dependencies():
+            if not self.dependencies:
+                return ''
+            dependencies_element = ET.Element('Dependencies')
+            for dep in self.dependencies:
+                property_dep = ET.SubElement(dependencies_element, 'PropertyDependency')
+                property_dep.attrib['Name'] = dep['obj'].propertyName
+                property_dep.attrib['Action'] = 'Enable'
+                condition = ET.SubElement(property_dep, 'Condition')
+                if (condition_value := dep['condition']) == 'Enumeration':
+                    enumeration = ET.SubElement(condition, condition_value)
+                    enumeration.attrib['Type'] = dep['obj'].xmlTypeName
+                    for value in dep['values']:
+                        value_tag = ET.SubElement(enumeration, 'Value')
+                        value_tag.text = str(value)
+                if (condition_value := dep['condition']) == 'Range':
+                    range_ = ET.SubElement(condition, condition_value)
+                    range_.attrib['Type'] = dep['obj'].xmlTypeName
+                    min_value = ET.SubElement(range_, 'Min')
+                    min_value.text = str(dep['min'])
+                    max_value = ET.SubElement(range_, 'Max')
+                    max_value.text = str(dep['max'])
+            ET.indent(dependencies_element)
+            return '\n' + ET.tostring(dependencies_element).decode(util.TXT_CODEC)
         support_rtpc_type = 'SupportRTPCType="Exclusive"' if self.rtpc else ''
         # TODO: support enumeration and userInterface
-        return f'''<Property Name="{self.propertyName}" Type="{xml_type_name}" {support_rtpc_type} DisplayName="{self.displayName}">
+        if self.type_ == 'bool':
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+  <DefaultValue>{self.defaultValue}</DefaultValue>
+  <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>{_generate_dependencies()}
+</Property>'''.splitlines()
+
+        return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
 <UserInterface Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}" />
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
   <Restrictions>
     <ValueRestriction>
-      <Range Type="{xml_type_name}">
+      <Range Type="{self.xmlTypeName}">
         <Min>{self.minValue}</Min>
         <Max>{self.maxValue}</Max>
       </Range>
     </ValueRestriction>
-  </Restrictions>
+  </Restrictions>{_generate_dependencies()}
 </Property>'''.splitlines()
 
     def dump_parameter_doc(self, docs_dir: str):
@@ -121,10 +158,36 @@ Range: {self.minValue} - {self.maxValue} <br/>'''
             util.save_text(output_path, doc_str)
 
 
+class PluginInfo:
+    def __init__(self, info_dict: dict):
+        self.infoDict = info_dict
+        self.defaultPlatformSupport = '''<Platform Name="Any">
+  <CanBeInsertOnBusses>true</CanBeInsertOnBusses>
+  <CanBeInsertOnAudioObjects>true</CanBeInsertOnAudioObjects>
+  <CanBeRendered>true</CanBeRendered>
+</Platform>'''
+
+    def generate_platform_support(self) -> list[str]:
+        if not self.infoDict['platform_support']:
+            return self.defaultPlatformSupport.splitlines()
+        lines = []
+        for platform, config in self.infoDict['platform_support'].items():
+            can_be_insert_on_busses = str(config.get('CanBeInsertOnBusses', True)).lower()
+            can_be_insert_on_audio_objects = str(config.get('CanBeInsertOnAudioObjects', True)).lower()
+            can_be_rendered = str(config.get('CanBeRendered', True)).lower()
+            lines.extend(f'''<Platform Name="{platform}">
+  <CanBeInsertOnBusses>{can_be_insert_on_busses}</CanBeInsertOnBusses>
+  <CanBeInsertOnAudioObjects>{can_be_insert_on_audio_objects}</CanBeInsertOnAudioObjects>
+  <CanBeRendered>{can_be_rendered}</CanBeRendered>
+</Platform>'''.splitlines())
+        return lines
+
+
 class ParameterGenerator:
     def __init__(self, path_man):
         self.pathMan = path_man
-        self.parameters: list[Parameter] = []
+        self.parameters: dict[str, Parameter] = {}
+        self.pluginInfo: Optional[PluginInfo] = None
 
     def main(self):
         self._load()
@@ -134,16 +197,28 @@ class ParameterGenerator:
         if not osp.isfile(self.pathMan.parameterConfig):
             raise FileNotFoundError(f'Parameter config not found: {self.pathMan.parameterConfig}')
         content = load_toml(self.pathMan.parameterConfig)
+
+        # load plugin info
+        self.pluginInfo = PluginInfo(content['plugin_info'])
+
+        # load parameters
         for name, define in content['parameters']['defines'].items():
-            self.parameters.append(Parameter.create(name, define))
+            self.parameters[name] = Parameter.create(name, define)
         for instance in content['parameters']['from_templates']:
             template = copy.deepcopy(content['templates'][instance['template']])
             for key, value in instance.get('override', {}).items():
                 template[key] = value
-            self.parameters.append(Parameter.create(f"{instance['template']}_{instance['suffix']}", template))
+            if 'dependencies' in template:
+                for dep in template['dependencies']:
+                    dep['name'] = dep['name'] % {'suffix': instance['suffix']}
 
-        for i, param in enumerate(self.parameters):
+            name = f"{instance['template']}_{instance['suffix']}"
+            self.parameters[name] = Parameter.create(name, template)
+
+        for i, param in enumerate(self.parameters.values()):
             param.assign_id(i)
+            for dep in param.dependencies:
+                dep['obj'] = self.parameters[dep['name']]
 
     def _generate(self):
         def _copy_template(relative):
@@ -189,10 +264,13 @@ class ParameterGenerator:
         def _generate_wwise_xml():
             target = 'WwisePlugin/ProjectName.xml'
             dst = _copy_template(target)
-            util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->', '<!-- [/ParameterGui] -->')
+            util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->',
+                                          '<!-- [/ParameterGui] -->')
+            util.substitute_lines_in_file(self.__generate_platform_support(), dst, '<!-- [PlatformSupport] -->',
+                                          '<!-- [/PlatformSupport] -->')
 
         def _generate_doc():
-            for param in self.parameters:
+            for param in self.parameters.values():
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
         _generate_fx_params_cpp()
@@ -203,44 +281,47 @@ class ParameterGenerator:
 
     def __generate_ids(self):
         lines = []
-        for i, param in enumerate(self.parameters):
+        for i, param in enumerate(self.parameters.values()):
             lines.append(param.generate_param_id())
         lines.append(f'static const AkUInt32 NUM_PARAMS = {len(self.parameters)};')
         return auto_add_line_end(lines)
 
     def __generate_declarations(self, rtpc=True):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             if param.rtpc == rtpc:
                 lines.append(param.generate_declaration())
         return auto_add_line_end(lines)
 
     def __generate_init(self):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             lines.append(param.generate_init())
         return auto_add_line_end(lines)
 
     def __generate_read_bank_data(self):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             lines.append(param.generate_read_bank_data())
         return auto_add_line_end(lines)
 
     def __generate_set_parameter(self):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             lines.append(param.generate_set_parameter())
         return auto_add_line_end(lines)
 
     def __generate_write_bank_data(self):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             lines.append(param.generate_write_bank_data())
         return auto_add_line_end(lines)
 
     def __generate_parameter_gui(self):
         lines = []
-        for param in self.parameters:
+        for param in self.parameters.values():
             lines.extend(param.generate_parameter_gui())
         return auto_add_line_end(lines)
+
+    def __generate_platform_support(self):
+        return auto_add_line_end(self.pluginInfo.generate_platform_support())

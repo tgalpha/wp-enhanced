@@ -1,3 +1,16 @@
+[plugin_info.platform_support]
+[plugin_info.platform_support.Any]
+CanBeInsertOnBusses = true
+CanBeInsertOnAudioObjects = true
+CanBeRendered = true
+
+
+[parameters.defines.param_placehold_enabled]
+type = 'bool'
+rtpc = false
+default_value = true
+
+
 [parameters.defines.param_placehold] # snake_case_name
 # int/float/bool supported
 type = 'int'
@@ -18,3 +31,7 @@ display_name = 'Parameter Placeholder'
 enumeration = ["opt1", "opt2"]
 # Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
 user_interface = { Fine = 0.01 }
+# Conditions for enabling parameter editing
+dependencies = [
+    { name = 'param_placehold_enabled', condition = 'Enumeration', values = [true] },
+]

@@ -32,11 +32,13 @@ for the documentation about the plugin xml format
   <EffectPlugin Name="%(display_name)s" CompanyID="64" PluginID="%(plugin_id)s">
     <PluginInfo>
       <PlatformSupport>
+        <!-- [PlatformSupport] -->
         <Platform Name="Any">
           <CanBeInsertOnBusses>true</CanBeInsertOnBusses>
           <CanBeInsertOnAudioObjects>true</CanBeInsertOnAudioObjects>
           <CanBeRendered>true</CanBeRendered>
         </Platform>
+        <!-- [/PlatformSupport] -->
       </PlatformSupport>
     </PluginInfo>
     <Properties>
