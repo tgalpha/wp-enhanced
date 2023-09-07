@@ -42,20 +42,24 @@ class Worker:
         if self.args.new:
             return self.new()
 
+        self.pathMan = self.pathMan or PathMan()
+
         if self.args.enableCpp17:
             return self.enable_cpp17()
 
-        self.pathMan = self.pathMan or PathMan()
         self.process_deploy_targets()
 
         if self.args.premake:
-            return self.premake()
-
-        if self.args.build:
-            return self.build()
+            self.premake()
 
         if self.args.generateParameters:
-            return self.generate_parameters()
+            self.generate_parameters()
+
+        if self.args.build:
+            self.build()
+
+        if self.args.pack:
+            self.pack()
 
     def process_deploy_targets(self):
         # TODO: move to post-build script
@@ -85,6 +89,11 @@ class Worker:
         logging.info('Premake project')
         self.wpWrapper.premake('Authoring')
 
+    def generate_parameters(self):
+        parameter_manager = ParameterGenerator(self.pathMan)
+        parameter_manager.main()
+        self.wpWrapper.build('Documentation')
+
     def build(self):
         self._terminate_wwise()
         self._build()
@@ -92,10 +101,13 @@ class Worker:
         self._apply_deploy_targets()
         self._reopen_wwise()
 
-    def generate_parameters(self):
-        parameter_manager = ParameterGenerator(self.pathMan)
-        parameter_manager.main()
-        self.wpWrapper.build('Documentation')
+    def pack(self):
+        logging.info('Package plugin and generate bundle')
+        self.wpWrapper.package('Common', '-v', self.wpWrapper.wwiseVersion)
+        self.wpWrapper.package('Documentation', '-v', self.wpWrapper.wwiseVersion)
+        self.wpWrapper.package('Windows_vc160', '-v', self.wpWrapper.wwiseVersion)
+        self.wpWrapper.package('Authoring', '-v', self.wpWrapper.wwiseVersion)
+        self.wpWrapper.generate_bundle('-v', self.wpWrapper.wwiseVersion)
 
     def _build(self):
         logging.info('Build authoring plugin')

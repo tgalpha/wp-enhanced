@@ -62,6 +62,16 @@ def main():
         help='Build project.'
     )
 
+    command_group.add_argument(
+        '-P',
+        '--pack',
+        action='store_true',
+        dest='pack',
+        default=False,
+        required=False,
+        help='Package plugin.'
+    )
+
     parser.add_argument(
         '-c',
         '--configuration',
