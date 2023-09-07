@@ -8,6 +8,7 @@ class WpWrapper:
     def __init__(self):
         self.wwiseRoot: str = os.getenv('WWISEROOT')
         self.wwiseSDKRoot: str = os.getenv('WWISESDK')
+        self.wwiseVersion: str = osp.basename(self.wwiseRoot).split(' ')[1]
         self.wpScriptDir = osp.join(self.wwiseRoot, 'Scripts/Build/Plugins')
 
         self.subcommands = (
