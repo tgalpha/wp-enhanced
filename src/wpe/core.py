@@ -2,7 +2,7 @@ import logging
 import os.path as osp
 import platform
 import subprocess
-from glob import glob
+import glob
 from typing import Optional
 
 # 3rd party
@@ -102,12 +102,24 @@ class Worker:
         self._reopen_wwise()
 
     def pack(self):
+        def _collect_packages():
+            util.remove_tree(self.pathMan.distDir)
+            for pkg in glob.iglob(osp.join(self.pathMan.root, f'{self.pathMan.pluginName}*.tar.xz')):
+                util.move_file(pkg, self.pathMan.distDir, isdstdir=True)
+            util.move_file(osp.join(self.pathMan.root, 'bundle.json'), self.pathMan.distDir, isdstdir=True)
+
+        def _zip_bundle():
+            util.zip_dir(self.pathMan.distDir)
+
         logging.info('Package plugin and generate bundle')
         self.wpWrapper.package('Common', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Documentation', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Windows_vc160', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Authoring', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.generate_bundle('-v', self.wpWrapper.wwiseVersion)
+        _collect_packages()
+        _zip_bundle()
+        logging.info(f'Saved to {self.pathMan.distDir}')
 
     def _build(self):
         logging.info('Build authoring plugin')
@@ -157,7 +169,7 @@ class WindowsWorker(Worker):
             build_output_dir = osp.join(self.wpWrapper.wwiseSDKRoot, f'x64_vc160/{self.args.configuration}/bin')
 
         self.sharedPluginFiles = list(filter(lambda x: not str(x).endswith('.xml'),
-                                             glob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))))
+                                             glob.iglob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))))
         return self.sharedPluginFiles
 
     def _build(self):
@@ -179,7 +191,7 @@ class WindowsWorker(Worker):
             return
 
         build_output_dir = osp.join(self.wpWrapper.wwiseRoot, f'Authoring/x64/{self.args.configuration}/bin/Plugins')
-        src_files = glob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))
+        src_files = glob.glob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))
         dst_dir = osp.join(self.wpWrapper.wwiseRoot, f'Authoring/x64/Release/bin/Plugins')
         logging.info(f'Copy authoring plugin "{src_files}", from "{build_output_dir}" to "{dst_dir}"')
         for src in src_files:

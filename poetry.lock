@@ -40,14 +40,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "kkpyutil"
-version = "0.115.2"
-description = "zero-dependency utility functions and classes"
+version = "0.154.6"
+description = "zero-dependency Python utility collection with an emphasis on systems programming and DevOps"
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "kkpyutil-0.115.2-py3-none-any.whl", hash = "sha256:4355934d8cfd60dfce046b1f5fa66aaa16ed18b699cd243f457a61b15b5e2417"},
-    {file = "kkpyutil-0.115.2.tar.gz", hash = "sha256:2c395fc49ccc589c6c6ea2c9a2ba40d5a1af392f65fe2af596f0d453dbf829ef"},
+    {file = "kkpyutil-0.154.6-py3-none-any.whl", hash = "sha256:a45160a234dd639c737038803fa9bb73ef5876f008c969b0af58af17a42b9964"},
+    {file = "kkpyutil-0.154.6.tar.gz", hash = "sha256:0d2334f4566f12b2e302ab1f6deb7b7602f7b36e76e416790800e5e35dc83a16"},
 ]
 
 [[package]]
@@ -148,4 +148,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "faa221a31ce7d76e79f2e20157d74cfda4ccd043cfc33892863ffa08d73f45ea"
+content-hash = "f21a0b2a2852b055ec46696478cb01f93374eaf96438e28935e11b52a7ab2159"
