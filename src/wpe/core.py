@@ -206,7 +206,7 @@ class WindowsWorker(Worker):
             if (engine := config['engine']) == 'ue':
                 deploy_path = osp.join(f'{config["root"]}/Plugins/Wwise/ThirdParty/x64_vc160/Profile/bin')
             elif engine == 'unity':
-                logging.warning('Unity is currently unsupported, skipped.')
+                deploy_path = osp.join(f'{config["root"]}/Assets/Wwise/API/Runtime/Plugins/Windows/x86_64/DSP')
             elif engine == 'other':
                 deploy_path = osp.join(f'{config["root"]}')
             else:
