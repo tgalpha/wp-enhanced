@@ -89,7 +89,8 @@ class Parameter:
         return f'    {self.struct}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
 
     def generate_set_parameter(self) -> str:
-        interpret_pointer = 'static_cast<AkInt32>(*((AkReal32*)in_pValue))' if self.type_ == 'int' else f'*(({self.typeName}*)in_pValue)'
+        need_reinterpret = self.typeName != 'AkReal32' and self.rtpc
+        interpret_pointer = f'static_cast<{self.typeName}>(*(AkReal32*)in_pValue)' if need_reinterpret else f'*(({self.typeName}*)in_pValue)'
         return f'''    case {self.paramIDName}:
         {self.struct}.{self.cppVariableName} = {interpret_pointer};
         m_paramChangeHandler.SetParamChange({self.paramIDName});
