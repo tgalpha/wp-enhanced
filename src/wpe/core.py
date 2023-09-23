@@ -102,24 +102,26 @@ class Worker:
         self._reopen_wwise()
 
     def pack(self):
-        def _collect_packages():
-            util.remove_tree(self.pathMan.distDir)
+        def _collect_packages(_output_dir):
+            util.remove_tree(_output_dir)
             for pkg in glob.iglob(osp.join(self.pathMan.root, f'{self.pathMan.pluginName}*.tar.xz')):
-                util.move_file(pkg, self.pathMan.distDir, isdstdir=True)
-            util.move_file(osp.join(self.pathMan.root, 'bundle.json'), self.pathMan.distDir, isdstdir=True)
+                util.move_file(pkg, _output_dir, isdstdir=True)
+            util.move_file(osp.join(self.pathMan.root, 'bundle.json'), _output_dir, isdstdir=True)
 
-        def _zip_bundle():
-            util.zip_dir(self.pathMan.distDir)
+        def _zip_bundle(_output_dir):
+            util.zip_dir(_output_dir)
 
         logging.info('Package plugin and generate bundle')
+        version_code, build_number = self.wpWrapper.wwiseVersion.rsplit('.', 1)
+        output_dir = osp.join(self.pathMan.distDir, f'{self.pathMan.pluginName}_v{version_code}_Build{build_number}')
         self.wpWrapper.package('Common', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Documentation', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Windows_vc160', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.package('Authoring', '-v', self.wpWrapper.wwiseVersion)
         self.wpWrapper.generate_bundle('-v', self.wpWrapper.wwiseVersion)
-        _collect_packages()
-        _zip_bundle()
-        logging.info(f'Saved to {self.pathMan.distDir}')
+        _collect_packages(output_dir)
+        _zip_bundle(output_dir)
+        logging.info(f'Saved to {output_dir}')
 
     def _build(self):
         logging.info('Build authoring plugin')
