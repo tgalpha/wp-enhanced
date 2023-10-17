@@ -8,7 +8,7 @@ class WpWrapper:
     def __init__(self):
         self.wwiseRoot: str = os.getenv('WWISEROOT')
         self.wwiseSDKRoot: str = os.getenv('WWISESDK')
-        self.wwiseVersion: str = osp.basename(self.wwiseRoot).split(' ')[1]
+        self.wwiseVersion: str = self._load_wwise_version()
         self.wpScriptDir = osp.join(self.wwiseRoot, 'Scripts/Build/Plugins')
 
         self.subcommands = (
@@ -18,6 +18,11 @@ class WpWrapper:
             'package',
             'premake',
         )
+
+    def _load_wwise_version(self) -> str:
+        install_entry = util.load_json(osp.join(self.wwiseRoot, 'install-entry.json'))
+        version = install_entry['bundle']['version']
+        return f'{version["year"]}.{version["major"]}.{version["minor"]}.{version["build"]}'
 
     def validate_env(self):
         if self.wwiseRoot is None:
