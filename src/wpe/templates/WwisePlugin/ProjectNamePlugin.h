@@ -24,37 +24,26 @@ the specific language governing permissions and limitations under the License.
   Copyright (c) 2021 Audiokinetic Inc.
 *******************************************************************************/
 
-#include "%(name)sPlugin.h"
-#include "../SoundEnginePlugin/%(name)sFXFactory.h"
+#pragma once
+
+#include <AK/Wwise/Plugin.h>
 
 // [PropertyNames]
 // [/PropertyNames]
 
-%(name)sPlugin::%(name)sPlugin()
+/// See https://www.audiokinetic.com/library/edge/?source=SDK&id=plugin__dll.html
+/// for the documentation about Authoring plug-ins
+class %(name)sPlugin final
+    : public AK::Wwise::Plugin::AudioPlugin
 {
-}
+public:
+    %(name)sPlugin();
+    ~%(name)sPlugin();
 
-%(name)sPlugin::~%(name)sPlugin()
-{
-}
+    /// This function is called by Wwise to obtain parameters that will be written to a bank.
+    /// Because these can be changed at run-time, the parameter block should stay relatively small.
+    /// Larger data should be put in the Data Block.
+    bool GetBankParameters(const GUID & in_guidPlatform, AK::Wwise::Plugin::DataWriter& in_dataWriter) const override;
+};
 
-bool %(name)sPlugin::GetBankParameters(const GUID & in_guidPlatform, AK::Wwise::Plugin::DataWriter& in_dataWriter) const
-{
-    // Write bank data here
-    // [WriteBankData]
-    in_dataWriter.WriteReal32(m_propertySet.GetReal32(in_guidPlatform, "Placeholder"));
-    // [/WriteBankData]
-
-    return true;
-}
-
-DEFINE_AUDIOPLUGIN_CONTAINER(%(name)s);											// Create a PluginContainer structure that contains the info for our plugin
-EXPORT_AUDIOPLUGIN_CONTAINER(%(name)s);											// This is a DLL, we want to have a standardized name
-ADD_AUDIOPLUGIN_CLASS_TO_CONTAINER(                                             // Add our CLI class to the PluginContainer
-    %(name)s,        // Name of the plug-in container for this shared library
-    %(name)sPlugin,  // Authoring plug-in class to add to the plug-in container
-    %(name)sFX       // Corresponding Sound Engine plug-in class
-);
-DEFINE_PLUGIN_REGISTER_HOOK
-
-DEFINEDUMMYASSERTHOOK;							// Placeholder assert hook for Wwise plug-ins using AKASSERT (cassert used by default)
+DECLARE_AUDIOPLUGIN_CONTAINER(%(name)s);	// Exposes our PluginContainer structure that contains the info for our plugin
