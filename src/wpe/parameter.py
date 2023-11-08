@@ -96,10 +96,16 @@ class Parameter:
         m_paramChangeHandler.SetParamChange({self.paramIDName});
         break;'''
 
+    def generate_property_name_declaration(self) -> str:
+        return f'extern const char* const sz{self.propertyName};'
+
+    def generate_property_name_definition(self) -> str:
+        return f'const char* const sz{self.propertyName} = "{self.propertyName}";'
+
     def generate_write_bank_data(self) -> str:
         writer = 'Write' + util.convert_compound_cases(self.typeName.lstrip('Ak'))
         getter = 'Get' + util.convert_compound_cases(self.typeName.lstrip('Ak'))
-        return f'    in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, "{self.propertyName}"));'
+        return f'    in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, sz{self.propertyName}));'
 
     def generate_parameter_gui(self) -> list[str]:
         def _generate_dependencies():
@@ -256,9 +262,17 @@ class ParameterGenerator:
             util.substitute_lines_in_file(self.__generate_set_parameter(), dst, '// [SetParameters]',
                                           '// [/SetParameters]', withindent=False)
 
-        def _generate_wwise_params_cpp():
+        def _generate_wwise_plugin_h():
+            target = 'WwisePlugin/ProjectNamePlugin.h'
+            dst = _copy_template(target)
+            util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
+                                          '// [/PropertyNames]', withindent=False)
+
+        def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
             dst = _copy_template(target)
+            util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
+                                          '// [/PropertyNames]', withindent=False)
             util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
                                           '// [/WriteBankData]', withindent=False)
 
@@ -274,9 +288,10 @@ class ParameterGenerator:
             for param in self.parameters.values():
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
-        _generate_fx_params_cpp()
         _generate_fx_params_h()
-        _generate_wwise_params_cpp()
+        _generate_fx_params_cpp()
+        _generate_wwise_plugin_h()
+        _generate_wwise_plugin_cpp()
         _generate_wwise_xml()
         _generate_doc()
 
@@ -310,6 +325,18 @@ class ParameterGenerator:
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_set_parameter())
+        return auto_add_line_end(lines)
+
+    def __generate_property_name_declaration(self):
+        lines = []
+        for param in self.parameters.values():
+            lines.append(param.generate_property_name_declaration())
+        return auto_add_line_end(lines)
+
+    def __generate_property_name_definition(self):
+        lines = []
+        for param in self.parameters.values():
+            lines.append(param.generate_property_name_definition())
         return auto_add_line_end(lines)
 
     def __generate_write_bank_data(self):
