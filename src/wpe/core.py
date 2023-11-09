@@ -90,7 +90,7 @@ class Worker:
         self.wpWrapper.premake('Authoring')
 
     def generate_parameters(self):
-        parameter_manager = ParameterGenerator(self.pathMan)
+        parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
         parameter_manager.main()
         self.wpWrapper.build('Documentation')
 
@@ -180,7 +180,7 @@ class WindowsWorker(Worker):
         self.wpWrapper.build('Windows_vc160', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
 
     def _terminate_wwise(self):
-        if self.args.forceCopyFile:
+        if self.args.force:
             cmd = ['taskkill', '/IM', 'wwise.exe', '/F']
             try:
                 util.run_cmd(cmd)
@@ -223,6 +223,6 @@ class WindowsWorker(Worker):
                     overwrite_copy(output, dst)
 
     def _reopen_wwise(self):
-        if self.args.forceCopyFile and self.terminatedWwise:
+        if self.args.force and self.terminatedWwise:
             wwise_exe = osp.join(self.wpWrapper.wwiseRoot, 'Authoring/x64/Release/bin/Wwise.exe')
             util.run_daemon([wwise_exe])

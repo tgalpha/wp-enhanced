@@ -1,4 +1,5 @@
 import copy
+import logging
 import os.path as osp
 from typing import Any, Optional
 from dataclasses import dataclass, field
@@ -80,13 +81,13 @@ class Parameter:
         return f'static const AkPluginParamID {self.paramIDName} = {self.id};'
 
     def generate_declaration(self) -> str:
-        return f'    {self.typeName} {self.cppVariableName};'
+        return f'{self.typeName} {self.cppVariableName};'
 
     def generate_init(self) -> str:
-        return f'        {self.struct}.{self.cppVariableName} = {self.defaultValue};'
+        return f'{self.struct}.{self.cppVariableName} = {self.defaultValue};'
 
     def generate_read_bank_data(self) -> str:
-        return f'    {self.struct}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
+        return f'{self.struct}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
 
     def generate_set_parameter(self) -> str:
         need_reinterpret = self.typeName != 'AkReal32' and self.rtpc
@@ -105,7 +106,7 @@ class Parameter:
     def generate_write_bank_data(self) -> str:
         writer = 'Write' + util.convert_compound_cases(self.typeName.lstrip('Ak'))
         getter = 'Get' + util.convert_compound_cases(self.typeName.lstrip('Ak'))
-        return f'    in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, sz{self.propertyName}));'
+        return f'in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, sz{self.propertyName}));'
 
     def generate_parameter_gui(self) -> list[str]:
         def _generate_dependencies():
@@ -191,8 +192,9 @@ class PluginInfo:
 
 
 class ParameterGenerator:
-    def __init__(self, path_man):
+    def __init__(self, path_man, is_forced=False):
         self.pathMan = path_man
+        self.isForced = is_forced
         self.parameters: dict[str, Parameter] = {}
         self.pluginInfo: Optional[PluginInfo] = None
 
@@ -229,8 +231,19 @@ class ParameterGenerator:
 
     def _generate(self):
         def _copy_template(relative):
+            def _need_overwrite(_dst):
+                if self.isForced:
+                    return True
+                if osp.isfile(_dst):
+                    content = util.load_text(_dst)
+                    return '[wp-enhanced template]' not in content
+                return True
+
             src = osp.join(self.pathMan.templatesDir, relative)
             dst = replace_in_basename(osp.join(self.pathMan.root, relative), 'ProjectName', self.pathMan.pluginName)
+            if not _need_overwrite(dst):
+                logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
+                return dst
             if osp.isfile(src):
                 overwrite_copy(src, dst)
                 util.substitute_keywords_in_file(dst,
@@ -256,9 +269,9 @@ class ParameterGenerator:
             target = 'SoundEnginePlugin/ProjectNameFXParams.cpp'
             dst = _copy_template(target)
             util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
-                                          '// [/ParameterInitialization]', withindent=False)
+                                          '// [/ParameterInitialization]')
             util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
-                                          '// [/ReadBankData]', withindent=False)
+                                          '// [/ReadBankData]')
             util.substitute_lines_in_file(self.__generate_set_parameter(), dst, '// [SetParameters]',
                                           '// [/SetParameters]', withindent=False)
 
@@ -266,15 +279,15 @@ class ParameterGenerator:
             target = 'WwisePlugin/ProjectNamePlugin.h'
             dst = _copy_template(target)
             util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
-                                          '// [/PropertyNames]', withindent=False)
+                                          '// [/PropertyNames]')
 
         def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
             dst = _copy_template(target)
             util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
-                                          '// [/PropertyNames]', withindent=False)
+                                          '// [/PropertyNames]')
             util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
-                                          '// [/WriteBankData]', withindent=False)
+                                          '// [/WriteBankData]')
 
         def _generate_wwise_xml():
             target = 'WwisePlugin/ProjectName.xml'
