@@ -28,6 +28,7 @@ the specific language governing permissions and limitations under the License.
 See https://www.audiokinetic.com/library/edge/?source=SDK&id=plugin__xml.html
 for the documentation about the plugin xml format
 -->
+<!-- [wp-enhanced template] **Do not delete this line** -->
 <PluginModule>
   <EffectPlugin Name="%(display_name)s" CompanyID="64" PluginID="%(plugin_id)s">
     <PluginInfo>

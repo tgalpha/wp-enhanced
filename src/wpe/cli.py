@@ -84,12 +84,14 @@ def main():
     )
     parser.add_argument(
         '-f',
-        '--force-copy-file',
+        '--force',
         action='store_true',
-        dest='forceCopyFile',
+        dest='force',
         required=False,
         default=False,
-        help='Terminate Wwise process and copy plugin files, then reopen Wwise.'
+        help='''Force operation. This argument is compatible with -gp or -b.
+    For -gp, it will overwrite existing source files.
+    For -b, it will terminate Wwise process and copy plugin files, then reopen Wwise.'''
     )
     command_group.add_argument(
         '-C',
