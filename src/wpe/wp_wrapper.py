@@ -47,7 +47,10 @@ class WpWrapper:
         return self.run(subcommand, *args[1:])
 
     def build(self, *args):
-        return self.run('build', *args)
+        res = self.run('build', *args)
+        if res != 0:
+            raise RuntimeError(f'Build failed. Exit code: {res}')
+        return res
 
     def generate_bundle(self, *args):
         return self.run('generate_bundle', *args)
