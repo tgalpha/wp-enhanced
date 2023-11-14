@@ -7,8 +7,8 @@ import kkpyutil as util
 
 class PathMan:
     def __init__(self, cwd=None):
-        self.root = cwd or os.getcwd()
-        self.premakePluginLua = self.find_premake_plugin_lua_in_ancestor_and_update_root()
+        self.premakePluginLua = self.find_premake_plugin_lua_in_ancestor_and_update_root(cwd or os.getcwd())
+        self.root = osp.dirname(self.premakePluginLua)
         os.chdir(self.root)
         self.pluginName = self.parse_plugin_name()
         self.pluginConfigHeader = osp.join(self.root, f'{self.pluginName}Config.h')
@@ -18,17 +18,19 @@ class PathMan:
         self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
         self.docsDir = osp.join(self.root, 'WwisePlugin/res/Md')
         self.distDir = osp.join(self.root, 'dist')
+        self.hooksDir = osp.join(self.configDir, 'hooks')
 
-    def find_premake_plugin_lua_in_ancestor_and_update_root(self):
+    @staticmethod
+    def find_premake_plugin_lua_in_ancestor_and_update_root(cwd):
         premake_script_filename = 'PremakePlugin.lua'
-        while self.root:
-            lua = osp.join(self.root, premake_script_filename)
+        while cwd:
+            lua = osp.join(cwd, premake_script_filename)
             if osp.isfile(lua):
                 return lua
-            parent = osp.dirname(self.root)
-            if parent == self.root:
+            parent = osp.dirname(cwd)
+            if parent == cwd:
                 break
-            self.root = parent
+            cwd = parent
         raise FileNotFoundError(f'Can not find PremakePlugin.lua in ancestor directories. '
                                 f'This command must be executed under a plugin directory. cwd: {os.getcwd()}')
 

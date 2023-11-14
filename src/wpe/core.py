@@ -14,6 +14,7 @@ from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
 from wpe.deploy_target import DeployTarget
 from wpe.parameter import ParameterGenerator
+from wpe.hook_processor import HookProcessor
 
 
 class Worker:
@@ -49,17 +50,26 @@ class Worker:
 
         self.process_deploy_targets()
 
+        hook_processor = HookProcessor(self.pathMan, self.args.configuration, self.args.withHooks)
         if self.args.premake:
+            hook_processor.processPreHook('premake')
             self.premake()
+            hook_processor.processPostHook('premake')
 
         if self.args.generateParameters:
+            hook_processor.processPreHook('generate_parameters')
             self.generate_parameters()
+            hook_processor.processPostHook('generate_parameters')
 
         if self.args.build:
+            hook_processor.processPreHook('build')
             self.build()
+            hook_processor.processPostHook('build')
 
         if self.args.pack:
+            hook_processor.processPreHook('pack')
             self.pack()
+            hook_processor.processPostHook('pack')
 
     def process_deploy_targets(self):
         # TODO: move to post-build script
