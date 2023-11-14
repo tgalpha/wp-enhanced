@@ -73,6 +73,19 @@ def main():
     )
 
     parser.add_argument(
+        '-H',
+        '--with-hooks',
+        action='store_true',
+        dest='withHooks',
+        default=False,
+        required=False,
+        help='''Execute command with hooks. Hooks should 
+- be placed in `$PROJECT_ROOT/.wpe/hooks` with name `pre_<command>.py` or `post_<command>.py`.
+  - supported commands: `premake`, `generate_parameters`, `build`, `pack`
+- define a function with name `main`, accept `project` and 'build_config` as argument.'''
+    )
+
+    parser.add_argument(
         '-c',
         '--configuration',
         action='store',
