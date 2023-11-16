@@ -3,16 +3,13 @@ import os.path as osp
 import platform
 import subprocess
 import glob
-from typing import Optional
 
 # 3rd party
 import kkpyutil as util
 
 # project
-from wpe.util import *
 from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
-from wpe.deploy_target import DeployTarget
 from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
 
@@ -23,7 +20,6 @@ class Worker:
 
         self.wpWrapper = WpWrapper()
         self.pathMan = path_man
-        self.deployTarget: Optional[DeployTarget] = None
 
         self.terminatedWwise = False
 
@@ -48,8 +44,6 @@ class Worker:
         if self.args.enableCpp17:
             return self.enable_cpp17()
 
-        self.process_deploy_targets()
-
         hook_processor = HookProcessor(self.pathMan, self.args.configuration, self.args.withHooks)
         if self.args.premake:
             hook_processor.processPreHook('premake')
@@ -71,22 +65,6 @@ class Worker:
             self.pack()
             hook_processor.processPostHook('pack')
 
-    def process_deploy_targets(self):
-        # TODO: move to post-build script
-        self.deployTarget = DeployTarget(path_man=self.pathMan)
-
-        if self.args.createDeployTarget:
-            self.deployTarget.create()
-        if self.args.listDeployTargets:
-            self.deployTarget.list()
-        if self.args.deleteDeployTarget:
-            self.deployTarget.delete(self.args.deleteDeployTarget)
-
-        if modified_target := (self.args.createDeployTarget or
-                               self.args.listDeployTargets or
-                               self.args.deleteDeployTarget):
-            self.deployTarget.save()
-
     def wp(self):
         logging.info('Run wp.py')
         self.wpWrapper.wp(self.args.wp)
@@ -107,8 +85,6 @@ class Worker:
     def build(self):
         self._terminate_wwise()
         self._build()
-        self._copy_authoring_plugin()
-        self._apply_deploy_targets()
         self._reopen_wwise()
 
     def pack(self):
@@ -140,12 +116,6 @@ class Worker:
     def _terminate_wwise(self):
         raise NotImplementedError('subclass it')
 
-    def _copy_authoring_plugin(self):
-        raise NotImplementedError('subclass it')
-
-    def _apply_deploy_targets(self):
-        raise NotImplementedError('subclass it')
-
     def _reopen_wwise(self):
         raise NotImplementedError('subclass it')
 
@@ -167,22 +137,6 @@ class Worker:
 class WindowsWorker(Worker):
     def __init__(self, args):
         super().__init__(args)
-        self.sharedPluginFiles = None
-
-    def __lazy_query_shared_plugin_files(self) -> list:
-        if self.sharedPluginFiles is not None:
-            return self.sharedPluginFiles
-
-        if self.args.configuration == 'Debug':
-            # Use authoring plugin in debug mode for assert hook
-            build_output_dir = osp.join(self.wpWrapper.wwiseRoot,
-                                        f'Authoring/x64/{self.args.configuration}/bin/Plugins')
-        else:
-            build_output_dir = osp.join(self.wpWrapper.wwiseSDKRoot, f'x64_vc160/{self.args.configuration}/bin')
-
-        self.sharedPluginFiles = list(filter(lambda x: not str(x).endswith('.xml'),
-                                             glob.iglob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))))
-        return self.sharedPluginFiles
 
     def _build(self):
         super()._build()
@@ -197,40 +151,6 @@ class WindowsWorker(Worker):
                 self.terminatedWwise = True
             except subprocess.CalledProcessError:
                 pass
-
-    def _copy_authoring_plugin(self):
-        if self.args.configuration == 'Release':
-            return
-
-        build_output_dir = osp.join(self.wpWrapper.wwiseRoot, f'Authoring/x64/{self.args.configuration}/bin/Plugins')
-        src_files = glob.glob(osp.join(build_output_dir, f'{self.pathMan.pluginName}.*'))
-        dst_dir = osp.join(self.wpWrapper.wwiseRoot, f'Authoring/x64/Release/bin/Plugins')
-        logging.info(f'Copy authoring plugin "{src_files}", from "{build_output_dir}" to "{dst_dir}"')
-        for src in src_files:
-            dst = osp.join(dst_dir, osp.basename(src))
-            overwrite_copy(src, dst)
-
-    def _apply_deploy_targets(self):
-        plugin_files = self.__lazy_query_shared_plugin_files()
-
-        for name, config in self.deployTarget.items():
-            deploy_path = None
-            if (engine := config['engine']) == 'ue':
-                deploy_path = osp.join(f'{config["root"]}/Plugins/Wwise/ThirdParty/x64_vc160/Profile/bin')
-            elif engine == 'unity':
-                deploy_path = osp.join(f'{config["root"]}/Assets/Wwise/API/Runtime/Plugins/Windows/x86_64/DSP')
-            elif engine == 'other':
-                deploy_path = osp.join(f'{config["root"]}')
-            else:
-                logging.warning(f'Unsupported engine type: {engine}, skipped.')
-
-            if deploy_path is not None:
-                logging.info(f'Apply deploy target: {name}')
-                for output in plugin_files:
-                    logging.info(
-                        f'Copy shared plugin "{output}" to "{deploy_path}"')
-                    dst = osp.join(deploy_path, osp.basename(output))
-                    overwrite_copy(output, dst)
 
     def _reopen_wwise(self):
         if self.args.force and self.terminatedWwise:

@@ -82,7 +82,20 @@ def main():
         help='''Execute command with hooks. Hooks should 
 - be placed in `$PROJECT_ROOT/.wpe/hooks` with name `pre_<command>.py` or `post_<command>.py`.
   - supported commands: `premake`, `generate_parameters`, `build`, `pack`
-- define a function with name `main`, accept `project` and 'build_config` as argument.'''
+- define a function with name `main`, accept followed arguments (or use `**kwargs`):
+  - proj_root: project root path
+  - build_config: build configuration (Debug, Profile, Release)
+  - plugin_name: plugin name, which is used to glob plugin files'''
+    )
+
+    parser.add_argument(
+        '-D',
+        '--deploy',
+        action='store_true',
+        dest='deploy',
+        default=False,
+        required=False,
+        help='Apply deployment targets.'
     )
 
     parser.add_argument(
@@ -105,33 +118,6 @@ def main():
         help='''Force operation. This argument is compatible with -gp or -b.
     For -gp, it will overwrite existing source files.
     For -b, it will terminate Wwise process and copy plugin files, then reopen Wwise.'''
-    )
-    command_group.add_argument(
-        '-C',
-        '--create-deploy-target',
-        action='store_true',
-        dest='createDeployTarget',
-        required=False,
-        default=False,
-        help='Create a new deploy target with interactive commandline.'
-    )
-    command_group.add_argument(
-        '-l',
-        '--list-deploy-targets',
-        action='store_true',
-        dest='listDeployTargets',
-        required=False,
-        default=False,
-        help='List all deploy targets.'
-    )
-    command_group.add_argument(
-        '-d',
-        '--delete-deploy-target',
-        action='store',
-        dest='deleteDeployTarget',
-        required=False,
-        default='',
-        help='Delete deploy targets by name.'
     )
 
     command_group.add_argument(
