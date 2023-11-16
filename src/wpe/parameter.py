@@ -22,6 +22,12 @@ _wwise_type_name_map = {
     'bool': 'bool',
 }
 
+_xml_type_name_map = {
+    'float': 'Real32',
+    'int': 'int32',
+    'bool': 'bool',
+}
+
 
 def auto_add_line_end(lines: list[str]):
     for i, line in enumerate(lines):
@@ -54,7 +60,7 @@ class Parameter:
         self.cppVariableName = _type_prefix_map[self.type_] + self.propertyName
         self.paramIDName = f'PARAM_{self.name.upper()}_ID'
         self.typeName = _wwise_type_name_map[self.type_]
-        self.xmlTypeName = self.typeName.lstrip('Ak')
+        self.xmlTypeName = _xml_type_name_map[self.type_]
         self.struct = 'RTPC' if self.rtpc else 'NonRTPC'
         self.displayName = self.displayName or util.convert_compound_cases(self.name, style='title')
 
@@ -74,7 +80,7 @@ class Parameter:
             dependencies=dict_define.get('dependencies', []),
             displayName=dict_define.get('display_name', ''),
             enumeration=dict_define.get('enumeration', []),
-            userInterface=dict_define.get('user_interface', {})
+            userInterface=dict_define.get('user_interface', '')
         )
 
     def generate_param_id(self) -> str:
@@ -134,15 +140,35 @@ class Parameter:
             ET.indent(dependencies_element)
             return '\n' + ET.tostring(dependencies_element).decode(util.TXT_CODEC)
         support_rtpc_type = 'SupportRTPCType="Exclusive"' if self.rtpc else ''
-        # TODO: support enumeration and userInterface
-        if self.type_ == 'bool':
+
+        def _generate_bool_gui_lines():
             return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>{_generate_dependencies()}
 </Property>'''.splitlines()
 
-        return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
-<UserInterface Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}" />
+        def _generate_int_gui_lines():
+            user_interface = self.userInterface
+            if not self.enumeration:
+                raise ValueError(f'Parameter "{self.name}" is int type but no enumeration provided. Please provide enumeration field with string list.')
+            options = '\n        '.join([f'<Value DisplayName="{opt}">{i}</Value>' for i, opt in enumerate(self.enumeration)])
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+  <UserInterface {user_interface} />
+  <DefaultValue>{self.defaultValue}</DefaultValue>
+  <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
+  <Restrictions>
+    <ValueRestriction>
+      <Enumeration Type="{self.xmlTypeName}"> 
+        {options} 
+      </Enumeration>
+    </ValueRestriction>
+  </Restrictions>{_generate_dependencies()}
+</Property>'''.splitlines()
+
+        def _generate_float_gui_lines():
+            user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}"'
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+  <UserInterface {user_interface} />
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
   <Restrictions>
@@ -154,6 +180,17 @@ class Parameter:
     </ValueRestriction>
   </Restrictions>{_generate_dependencies()}
 </Property>'''.splitlines()
+
+        if self.type_ == 'bool':
+            return _generate_bool_gui_lines()
+
+        if self.type_ == 'int':
+            return _generate_int_gui_lines()
+
+        if self.type_ == 'float':
+            return _generate_float_gui_lines()
+
+        raise NotImplementedError(f'Parameter type "{self.type_}" not supported.')
 
     def dump_parameter_doc(self, docs_dir: str):
         for lang in self.description:
@@ -199,10 +236,10 @@ class ParameterGenerator:
         self.pluginInfo: Optional[PluginInfo] = None
 
     def main(self):
-        self._load()
+        self._load_parameter_config()
         self._generate()
 
-    def _load(self):
+    def _load_parameter_config(self):
         if not osp.isfile(self.pathMan.parameterConfig):
             raise FileNotFoundError(f'Parameter config not found: {self.pathMan.parameterConfig}')
         content = load_toml(self.pathMan.parameterConfig)
@@ -213,7 +250,7 @@ class ParameterGenerator:
         # load parameters
         for name, define in content['parameters']['defines'].items():
             self.parameters[name] = Parameter.create(name, define)
-        for instance in content['parameters']['from_templates']:
+        for instance in content['parameters'].get('from_templates', []):
             template = copy.deepcopy(content['templates'][instance['template']])
             for key, value in instance.get('override', {}).items():
                 template[key] = value

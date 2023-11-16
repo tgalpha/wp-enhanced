@@ -7,6 +7,7 @@ import kkpyutil as util
 
 class PathMan:
     def __init__(self, cwd=None):
+        self.templatesDir = osp.join(osp.dirname(__file__), 'templates')
         self.premakePluginLua = self.find_premake_plugin_lua_in_ancestor_and_update_root(cwd or os.getcwd())
         self.root = osp.dirname(self.premakePluginLua)
         os.chdir(self.root)
@@ -14,7 +15,6 @@ class PathMan:
         self.pluginConfigHeader = osp.join(self.root, f'{self.pluginName}Config.h')
         self.pluginId = self.parse_plugin_id()
         self.configDir = osp.join(self.root, '.wpe')
-        self.templatesDir = osp.join(osp.dirname(__file__), 'templates')
         self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
         self.docsDir = osp.join(self.root, 'WwisePlugin/res/Md')
         self.distDir = osp.join(self.root, 'dist')

@@ -5,33 +5,44 @@ CanBeInsertOnAudioObjects = true
 CanBeRendered = true
 
 
-[parameters.defines.param_placehold_enabled]
+[parameters.defines.bool_param_as_checkbox]
 type = 'bool'
 rtpc = false
 default_value = true
 
 
-[parameters.defines.param_placehold] # snake_case_name
-# int/float/bool supported
+[parameters.defines.int_param_as_combo_box] # snake_case_name
+# int/float/bool are supported
 type = 'int'
 rtpc = true
-default_value = 50
-min_value = 0
-max_value = 100
+default_value = 0
 
 # Fields below are optional
 # Description displayed in Wwise UI. Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=effectplugin_tools_property_help.html
 description = [
-    {'launguage' = 'en', 'text' = 'This is a description for this parameter'},
-    {'launguage' = 'zh', 'text' = '这是一个参数的描述'}
+    { language = 'en', text = 'This is a description for this parameter' },
+    { language = 'zh', text = '这是一个参数的描述' }
 ]
 # Name displayed in Wwise UI, default to auto generate title from snake_case_name. e.g. en_US => en US, this_is_title => This is Title
-display_name = 'Parameter Placeholder'
+display_name = 'Int Parameter as Combo Box'
 # Only effective when type is 'int', options will mapped to 0, 1, 2, ...
 enumeration = ["opt1", "opt2"]
-# Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
-user_interface = { Fine = 0.01 }
 # Conditions for enabling parameter editing
 dependencies = [
-    { name = 'param_placehold_enabled', condition = 'Enumeration', values = [true] },
+    { name = 'bool_param_as_checkbox', condition = 'Enumeration', values = [true] },
 ]
+
+
+[parameters.defines.float_param_as_slider]
+type = 'float'
+rtpc = true
+default_value = 0
+min_value = -96
+max_value = 24
+
+description = [
+    { language = 'en', text = 'This is a description for this parameter' },
+    { language = 'zh', text = '这是一个参数的描述' }
+]
+# Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
+user_interface = 'SliderType="6" Step="0.1" Fine="0.01" Decimals="2"'
