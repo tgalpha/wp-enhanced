@@ -7,20 +7,25 @@ from wpe.pathman import PathMan
 
 
 class HookProcessor:
-    def __init__(self, path_man: PathMan, build_config: str, enabled=False):
+    def __init__(self, path_man: PathMan, build_config: str, target_hooks: list[str]):
         self.pathMan = path_man
         self.buildConfig = build_config
-        self.enabled = enabled
+        self.targetHooks = target_hooks
 
-    def processPreHook(self, command):
-        self._processHook('pre', command)
+    def process_pre_hook(self, command):
+        self._process_hook('pre', command)
 
-    def processPostHook(self, command):
-        self._processHook('post', command)
+    def process_post_hook(self, command):
+        self._process_hook('post', command)
 
-    def _processHook(self, phase, command):
+    def _process_hook(self, phase, command):
+        def should_execute(_hook_name):
+            if not self.targetHooks:
+                return True
+            return _hook_name in self.targetHooks and osp.isfile(osp.join(self.pathMan.hooksDir, f'{hook_name}.py'))
+
         hook_name = f'{phase}_{command}'
-        if not self.enabled or not osp.isfile(osp.join(self.pathMan.hooksDir, f'{hook_name}.py')):
+        if not should_execute(hook_name):
             return
 
         hook_module = util.safe_import_module(hook_name, self.pathMan.hooksDir)

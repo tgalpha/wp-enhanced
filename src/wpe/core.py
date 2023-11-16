@@ -53,24 +53,24 @@ class Worker:
 
         hook_processor = HookProcessor(self.pathMan, self.args.configuration, self.args.withHooks)
         if self.args.premake:
-            hook_processor.processPreHook('premake')
+            hook_processor.process_pre_hook('premake')
             self.premake()
-            hook_processor.processPostHook('premake')
+            hook_processor.process_post_hook('premake')
 
         if self.args.generateParameters:
-            hook_processor.processPreHook('generate_parameters')
+            hook_processor.process_pre_hook('generate_parameters')
             self.generate_parameters()
-            hook_processor.processPostHook('generate_parameters')
+            hook_processor.process_post_hook('generate_parameters')
 
         if self.args.build:
-            hook_processor.processPreHook('build')
+            hook_processor.process_pre_hook('build')
             self.build()
-            hook_processor.processPostHook('build')
+            hook_processor.process_post_hook('build')
 
         if self.args.pack:
-            hook_processor.processPreHook('pack')
+            hook_processor.process_pre_hook('pack')
             self.pack()
-            hook_processor.processPostHook('pack')
+            hook_processor.process_post_hook('pack')
 
     def wp(self):
         logging.info('Run wp.py')
