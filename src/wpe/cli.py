@@ -7,7 +7,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog='Plugin dev ci build tool',
         add_help=True,
-        epilog='Wrapper of `wp.py`. Easy to premake, build, and deploy wwise plugins.',
+        epilog='Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.',
         formatter_class=argparse.RawTextHelpFormatter
     )
 
@@ -29,7 +29,17 @@ def main():
         dest='new',
         default=False,
         required=False,
-        help='Create a new plugin project.'
+        help='Create a new plugin project. Will auto init wpe config.'
+    )
+
+    command_group.add_argument(
+        '-i',
+        '--init-wpe',
+        action='store_true',
+        dest='initWpe',
+        default=False,
+        required=False,
+        help='Initialize wpe project config for existing plugin project.'
     )
 
     command_group.add_argument(

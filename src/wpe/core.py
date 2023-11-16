@@ -8,6 +8,7 @@ import glob
 import kkpyutil as util
 
 # project
+import wpe.util as wpe_util
 from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
 from wpe.parameter import ParameterGenerator
@@ -30,6 +31,9 @@ class Worker:
             return WindowsWorker(args)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
+    def _lazy_init_pathman(self):
+        self.pathMan = self.pathMan or PathMan()
+
     def main(self):
         self.wpWrapper.validate_env()
 
@@ -39,7 +43,10 @@ class Worker:
         if self.args.new:
             return self.new()
 
-        self.pathMan = self.pathMan or PathMan()
+        self._lazy_init_pathman()
+
+        if self.args.initWpe:
+            return self.init_wpe()
 
         if self.args.enableCpp17:
             return self.enable_cpp17()
@@ -72,6 +79,19 @@ class Worker:
     def new(self):
         logging.info('Create new project')
         self.wpWrapper.new()
+        self.init_wpe()
+        self.premake()
+        self.generate_parameters()
+        logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
+
+    def init_wpe(self):
+        logging.info('Initialize wpe project config')
+        self._lazy_init_pathman()
+
+        wpe_util.overwrite_copy(
+            osp.join(self.pathMan.templatesDir, '.wpe'),
+            osp.join(self.pathMan.configDir)
+        )
 
     def premake(self):
         logging.info('Premake project')
