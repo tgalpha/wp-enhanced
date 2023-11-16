@@ -25,4 +25,7 @@ class HookProcessor:
 
         hook_module = util.safe_import_module(hook_name, self.pathMan.hooksDir)
         logging.info(f'Running hook: {hook_name}')
-        hook_module.main(proj_root=self.pathMan.root, build_config=self.buildConfig)
+        hook_module.main(proj_root=self.pathMan.root,
+                         build_config=self.buildConfig,
+                         plugin_name=self.pathMan.pluginName,
+                         )
