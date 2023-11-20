@@ -59,7 +59,11 @@ class WpWrapper:
         return self.run('new', *args)
 
     def package(self, *args):
-        return self.run('package', *args)
+        util.lazy_prepend_sys_path([self.wpScriptDir])
+        import wpe.wp_subcommand_patched.package as wsp_package
+        res = wsp_package.run(args)
+        util.lazy_remove_from_sys_path([self.wpScriptDir])
+        return res
 
     def premake(self, *args):
         return self.run('premake', *args)
