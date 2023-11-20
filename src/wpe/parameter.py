@@ -84,7 +84,7 @@ class Parameter:
         )
 
     def generate_param_id(self) -> str:
-        return f'static const AkPluginParamID {self.paramIDName} = {self.id};'
+        return f'static constexpr AkPluginParamID {self.paramIDName} = {self.id};'
 
     def generate_declaration(self) -> str:
         return f'{self.typeName} {self.cppVariableName};'
@@ -349,7 +349,7 @@ class ParameterGenerator:
         lines = []
         for i, param in enumerate(self.parameters.values()):
             lines.append(param.generate_param_id())
-        lines.append(f'static const AkUInt32 NUM_PARAMS = {len(self.parameters)};')
+        lines.append(f'static constexpr AkUInt32 NUM_PARAMS = {len(self.parameters)};')
         return auto_add_line_end(lines)
 
     def __generate_declarations(self, rtpc=True):
