@@ -119,14 +119,20 @@ class Worker:
 
         logging.info('Package plugin and generate bundle')
         version_code, build_number = self.wpWrapper.wwiseVersion.rsplit('.', 1)
+        if osp.isfile(self.pathMan.buildNumberFile):
+            build_number = util.load_json(self.pathMan.buildNumberFile) + 1
+        else:
+            build_number = 1
+        plugin_version = f'{version_code}.{build_number}'
         output_dir = osp.join(self.pathMan.distDir, f'{self.pathMan.pluginName}_v{version_code}_Build{build_number}')
-        self.wpWrapper.package('Common', '-v', self.wpWrapper.wwiseVersion)
-        self.wpWrapper.package('Documentation', '-v', self.wpWrapper.wwiseVersion)
-        self.wpWrapper.package('Windows_vc160', '-v', self.wpWrapper.wwiseVersion)
-        self.wpWrapper.package('Authoring', '-v', self.wpWrapper.wwiseVersion)
-        self.wpWrapper.generate_bundle('-v', self.wpWrapper.wwiseVersion)
+        self.wpWrapper.package('Common', '-v', plugin_version)
+        self.wpWrapper.package('Documentation', '-v', plugin_version)
+        self.wpWrapper.package('Windows_vc160', '-v', plugin_version)
+        self.wpWrapper.package('Authoring', '-v', plugin_version)
+        self.wpWrapper.generate_bundle('-v', plugin_version)
         _collect_packages(output_dir)
         _zip_bundle(output_dir)
+        util.save_json(self.pathMan.buildNumberFile, build_number)
         logging.info(f'Saved to {output_dir}')
 
     def _build(self):
