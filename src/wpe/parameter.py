@@ -217,14 +217,10 @@ class PluginInfo:
             return self.defaultPlatformSupport.splitlines()
         lines = []
         for platform, config in self.infoDict['platform_support'].items():
-            can_be_insert_on_busses = str(config.get('CanBeInsertOnBusses', True)).lower()
-            can_be_insert_on_audio_objects = str(config.get('CanBeInsertOnAudioObjects', True)).lower()
-            can_be_rendered = str(config.get('CanBeRendered', True)).lower()
-            lines.extend(f'''<Platform Name="{platform}">
-  <CanBeInsertOnBusses>{can_be_insert_on_busses}</CanBeInsertOnBusses>
-  <CanBeInsertOnAudioObjects>{can_be_insert_on_audio_objects}</CanBeInsertOnAudioObjects>
-  <CanBeRendered>{can_be_rendered}</CanBeRendered>
-</Platform>'''.splitlines())
+            lines.append(f'<Platform Name="{platform}">')
+            for key, value in config.items():
+                lines.append(f'  <{key}>{str(value).lower()}</{key}>')
+            lines.append('</Platform>')
         return lines
 
 
