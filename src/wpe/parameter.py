@@ -47,7 +47,7 @@ class Parameter:
     description: list[dict] = field(default_factory=list)
     dependencies: list[dict] = field(default_factory=list)
     displayName: str = ''
-    enumeration: list[str] = field(default_factory=list)
+    enumeration: list[dict] = field(default_factory=list)
     userInterface: dict = field(default_factory=dict)
     id: int = 0
 
@@ -151,7 +151,7 @@ class Parameter:
             user_interface = self.userInterface
             if not self.enumeration:
                 raise ValueError(f'Parameter "{self.name}" is int type but no enumeration provided. Please provide enumeration field with string list.')
-            options = '\n        '.join([f'<Value DisplayName="{opt}">{i}</Value>' for i, opt in enumerate(self.enumeration)])
+            options = '\n        '.join(['<Value DisplayName="{}">{}</Value>'.format(opt['displayName'], opt['value']) for opt in self.enumeration])
             return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
   <UserInterface {user_interface} />
   <DefaultValue>{self.defaultValue}</DefaultValue>
@@ -159,7 +159,7 @@ class Parameter:
   <Restrictions>
     <ValueRestriction>
       <Enumeration Type="{self.xmlTypeName}"> 
-        {options} 
+        {options}
       </Enumeration>
     </ValueRestriction>
   </Restrictions>{_generate_dependencies()}
