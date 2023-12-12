@@ -244,6 +244,8 @@ class ParameterGenerator:
         self.pluginInfo = PluginInfo(content['plugin_info'])
 
         # load parameters
+        if 'parameters' not in content:
+            return
         for name, define in content['parameters']['defines'].items():
             self.parameters[name] = Parameter.create(name, define)
         for instance in content['parameters'].get('from_templates', []):
