@@ -75,7 +75,7 @@ struct %(name)sFXParams
     /// Update a single parameter at a time and perform the necessary actions on the parameter changes.
     AKRESULT SetParam(AkPluginParamID in_paramID, const void* in_pValue, AkUInt32 in_ulParamSize) override;
 
-    AK::AkFXParameterChangeHandler<NUM_PARAMS> m_paramChangeHandler;
+    AK::AkFXParameterChangeHandler<NUM_PARAMS> paramChangeHandler;
 
     %(name)sRTPCParams RTPC;
     %(name)sNonRTPCParams NonRTPC;
