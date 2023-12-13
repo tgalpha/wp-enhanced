@@ -41,7 +41,7 @@ the specific language governing permissions and limitations under the License.
 {
     RTPC = in_rParams.RTPC;
     NonRTPC = in_rParams.NonRTPC;
-    m_paramChangeHandler.SetAllParamChanges();
+    paramChangeHandler.SetAllParamChanges();
 }
 
 AK::IAkPluginParam* %(name)sFXParams::Clone(AK::IAkPluginMemAlloc* in_pAllocator)
@@ -57,7 +57,7 @@ AKRESULT %(name)sFXParams::Init(AK::IAkPluginMemAlloc* in_pAllocator, const void
         // [ParameterInitialization]
         RTPC.fPlaceholder = 0.0f;
         // [/ParameterInitialization]
-        m_paramChangeHandler.SetAllParamChanges();
+        paramChangeHandler.SetAllParamChanges();
         return AK_Success;
     }
 
@@ -80,7 +80,7 @@ AKRESULT %(name)sFXParams::SetParamsBlock(const void* in_pParamsBlock, AkUInt32 
     RTPC.fPlaceholder = READBANKDATA(AkReal32, pParamsBlock, in_ulBlockSize);
     // [/ReadBankData]
     CHECKBANKDATASIZE(in_ulBlockSize, eResult);
-    m_paramChangeHandler.SetAllParamChanges();
+    paramChangeHandler.SetAllParamChanges();
 
     return eResult;
 }
@@ -95,7 +95,7 @@ AKRESULT %(name)sFXParams::SetParam(AkPluginParamID in_paramID, const void* in_p
     // [SetParameters]
     case PARAM_PLACEHOLDER_ID:
         RTPC.fPlaceholder = *((AkReal32*)in_pValue);
-        m_paramChangeHandler.SetParamChange(PARAM_PLACEHOLDER_ID);
+        paramChangeHandler.SetParamChange(PARAM_PLACEHOLDER_ID);
         break;
     // [/SetParameters]
     default:
