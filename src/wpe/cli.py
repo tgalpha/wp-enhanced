@@ -100,16 +100,6 @@ Hooks should:
     )
 
     parser.add_argument(
-        '-D',
-        '--deploy',
-        action='store_true',
-        dest='deploy',
-        default=False,
-        required=False,
-        help='Apply deployment targets.'
-    )
-
-    parser.add_argument(
         '-c',
         '--configuration',
         action='store',
