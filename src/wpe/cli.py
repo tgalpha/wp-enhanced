@@ -100,6 +100,16 @@ Hooks should:
     )
 
     parser.add_argument(
+        '-plt',
+        '--platform',
+        action='store',
+        choices=('Android', 'Authoring', 'Authoring_Windows', 'Authoring_Linux', 'Authoring_Mac', 'iOS', 'Linux', 'LinuxAuto', 'Mac', 'NX', 'PS4', 'PS5', 'QNX', 'tvOS', 'Windows_vc160', 'Windows_vc170', 'WinGC', 'XboxOneGC', 'XboxSeriesX'),
+        dest='platform',
+        default='Authoring',
+        required=False,
+        help='Platform to premake. Default value is Authoring.'
+    )
+    parser.add_argument(
         '-c',
         '--configuration',
         action='store',
