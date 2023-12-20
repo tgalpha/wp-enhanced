@@ -40,10 +40,16 @@ def find_artifacts(args):
     artifacts_found_in_project = []
 
     platform_info = platform_registry.get(args.platform)
-    for artifact_glob in platform_info.package.artifacts:
+    # [wp-enhanced] exclude pdb and debug artifacts
+    debug_artifacts_folders = {'Debug', 'Debug(StaticCRT)', 'Debug-iphoneos', 'Debug-iphonesimulator'}
+    for artifact_glob in (pattern for pattern in platform_info.package.artifacts if not pattern.endswith(".pdb")):
         for artifact in glob(os.path.join(WWISE_ROOT, artifact_glob.format(plugin_name=PLUGIN_NAME))):
+            sections = set(artifact.split(os.path.sep))
+            if sections & debug_artifacts_folders:
+                continue
             artifacts_found.append(artifact)
             print("Found {}".format(artifact))
+    # [/wp-enhanced]
 
     # validate additional artifacts
     for artifact_glob in args.additional_artifacts:
@@ -166,30 +172,32 @@ def run(argv):
             artifact_re = re.compile(r"([/\\])Debug\1")
             return bool(artifact_re.search(artifact))
 
+        # [wp-enhanced] add artifacts recursively, avoid adding empty folders
         def archive_artifacts(output_name, write_mode):
+            def need_add(_artifact):
+                if is_authoring_debug_package(output_name):
+                    if not is_debug_artifact(_artifact) or is_data_artifact(_artifact):
+                        return False
+                elif is_authoring_release_package(output_name) and is_debug_artifact(_artifact):
+                    return False
+                return True
+
+            artifacts_dst_pair: list[tuple[str, str]] = []
+            for artifact in artifacts_found:
+                if need_add(artifact):
+                    print("Compressing {}...".format(artifact))
+                    artifacts_dst_pair.append((artifact, os.path.relpath(artifact, WWISE_ROOT)))
+            for (artifact, dest) in artifacts_found_in_project:
+                if need_add(artifact):
+                    print("Compressing {}...".format(artifact))
+                    artifacts_dst_pair.append((artifact, os.path.join(dest, os.path.basename(artifact))))
+
+            if not artifacts_dst_pair:
+                return
             with tarfile.open(output_name, write_mode, format=tarfile.GNU_FORMAT) as tar:
-                for artifact in artifacts_found:
-                    add_artifact = True
-                    if is_authoring_debug_package(output_name):
-                        if not is_debug_artifact(artifact) or is_data_artifact(artifact):
-                            add_artifact = False
-                    elif is_authoring_release_package(output_name) and is_debug_artifact(artifact):
-                        add_artifact = False
-                    if add_artifact:
-                        print("Compressing {}...".format(artifact))
-                        # [wp-enhanced] add artifacts recursively
-                        tar.add(artifact, os.path.relpath(artifact, WWISE_ROOT), recursive=True)
-                for (artifact, dest) in artifacts_found_in_project:
-                    add_artifact = True
-                    if is_authoring_debug_package(output_name):
-                        if not is_debug_artifact(artifact) or is_data_artifact(artifact):
-                            add_artifact = False
-                    elif is_authoring_release_package(output_name) and is_debug_artifact(artifact):
-                        add_artifact = False
-                    if add_artifact:
-                        print("Compressing {}...".format(artifact))
-                        # [wp-enhanced] add artifacts recursively
-                        tar.add(artifact, os.path.join(dest, os.path.basename(artifact)), recursive=True)
+                for artifact, dest in artifacts_dst_pair:
+                    tar.add(artifact, dest, recursive=True)
+        # [/wp-enhanced]
 
         for compressed_archive_name in compressed_archive_names:
             try:
