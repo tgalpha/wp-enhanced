@@ -95,7 +95,7 @@ class Worker:
 
     def premake(self):
         logging.info('Premake project')
-        self.wpWrapper.premake('Authoring')
+        self.wpWrapper.premake(self.args.platform)
 
     def generate_parameters(self):
         parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
