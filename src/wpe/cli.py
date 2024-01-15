@@ -131,15 +131,6 @@ Hooks should:
     For -b, it will terminate Wwise process and copy plugin files, then reopen Wwise.'''
     )
 
-    command_group.add_argument(
-        '--enable-cpp17',
-        action='store_true',
-        dest='enableCpp17',
-        required=False,
-        default=False,
-        help='Change premake cppdialect to c++17 in global premakePlugin.lua. Will leave a backup file in the same directory(%%WWISEROOT%%\\Scripts\\Build\\Plugins).'
-    )
-
     parsed_args = parser.parse_args()
     worker = Worker.get_platform_worker(parsed_args)
     worker.main()

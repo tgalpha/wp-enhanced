@@ -49,6 +49,3 @@ class PathMan:
         for line in lines:
             if matched := re.match(name_define_pattern, line):
                 return int(matched.group().lstrip(prefix))
-
-    def get_premake_template_path(self):
-        return osp.join(self.templatesDir, 'premakePlugins.lua')

@@ -48,9 +48,6 @@ class Worker:
         if self.args.initWpe:
             return self.init_wpe()
 
-        if self.args.enableCpp17:
-            return self.enable_cpp17()
-
         hook_processor = HookProcessor(self.pathMan, self.args.configuration, self.args.withHooks)
         if self.args.premake:
             hook_processor.process_pre_hook('premake')
@@ -144,20 +141,6 @@ class Worker:
 
     def _reopen_wwise(self):
         raise NotImplementedError('subclass it')
-
-    def enable_cpp17(self):
-        logging.info('Enable C++17')
-        template = self.pathMan.get_premake_template_path()
-        target = osp.abspath(osp.join(self.wpWrapper.wpScriptDir, 'premakePlugins.lua'))
-        backup = target + '.bak'
-        if osp.isfile(backup):
-            if input(f'Backup file "{backup}" already exists, overwrite? [y/n]') != 'y':
-                logging.info('Abort')
-                return
-
-        util.copy_file(target, backup)
-        util.copy_file(template, target)
-        logging.info(f'premakePlugins.lua updated. Modification is wrapped in [wp-enhanced]. Backup file: "{backup}"')
 
 
 class WindowsWorker(Worker):
