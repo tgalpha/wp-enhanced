@@ -246,7 +246,7 @@ class ParameterGenerator:
         # load parameters
         if 'parameters' not in content:
             return
-        for name, define in content['parameters']['defines'].items():
+        for name, define in content['parameters'].get('defines', {}).items():
             self.parameters[name] = Parameter.create(name, define)
         for instance in content['parameters'].get('from_templates', []):
             template = copy.deepcopy(content['templates'][instance['template']])
