@@ -249,16 +249,10 @@ class ParameterGenerator:
         for name, define in content['parameters'].get('defines', {}).items():
             self.parameters[name] = Parameter.create(name, define)
         for instance in content['parameters'].get('from_templates', []):
-            template = copy.deepcopy(content['templates'][instance['template']])
-            for key, value in instance.get('override', {}).items():
-                template[key] = value
-            if 'dependencies' in template:
-                for dep in template['dependencies']:
-                    dep['name'] = dep['name'] % {'suffix': instance['suffix']}
-
-            name = f"{instance['template']}_{instance['suffix']}"
-            self.parameters[name] = Parameter.create(name, template)
-
+            self.__load_with_template(instance, content['templates'])
+        for instance in content['parameters'].get('from_inner_types', []):
+            self.__load_with_inner_type(instance, content['inner_types'])
+        # link parameter dependency
         for i, param in enumerate(self.parameters.values()):
             param.assign_id(i)
             for dep in param.dependencies:
@@ -349,6 +343,30 @@ class ParameterGenerator:
             lines.append(param.generate_param_id())
         lines.append(f'static constexpr AkUInt32 NUM_PARAMS = {len(self.parameters)};')
         return auto_add_line_end(lines)
+
+    def __load_with_template(self, instance, templates):
+        template = copy.deepcopy(templates[instance['template']])
+        for key, value in instance.get('override', {}).items():
+            template[key] = value
+        for dep in template.get('dependencies', []):
+            dep['name'] = dep['name'] % {'suffix': instance['suffix']}
+
+        name = f"{instance['template']}_{instance['suffix']}"
+        self.parameters[name] = Parameter.create(name, template)
+
+    def __load_with_inner_type(self, instance, inner_types):
+        inner_type = inner_types[instance['inner_type']]
+        overrides = instance.get('overrides', {})
+
+        for field_name, template in inner_type.items():
+            template = copy.deepcopy(template)
+            if field_name in overrides:
+                template['default_value'] = overrides[field_name]
+            for dep in template.get('dependencies', []):
+                dep['name'] = f"{instance['inner_type']}_{dep['name'] % {'suffix': instance['suffix']}}"
+
+            name = f"{instance['inner_type']}_{field_name}_{instance['suffix']}"
+            self.parameters[name] = Parameter.create(name, template)
 
     def __generate_declarations(self, rtpc=True):
         lines = []

@@ -78,7 +78,6 @@ class Worker:
         self.wpWrapper.new()
         self.init_wpe()
         self.premake()
-        self.generate_parameters()
         logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
 
     def init_wpe(self):
