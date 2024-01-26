@@ -232,10 +232,10 @@ class ParameterGenerator:
         self.pluginInfo: Optional[PluginInfo] = None
 
     def main(self):
-        self._load_parameter_config()
+        self.load_parameter_config()
         self._generate()
 
-    def _load_parameter_config(self):
+    def load_parameter_config(self):
         if not osp.isfile(self.pathMan.parameterConfig):
             raise FileNotFoundError(f'Parameter config not found: {self.pathMan.parameterConfig}')
         content = load_toml(self.pathMan.parameterConfig)
