@@ -9,6 +9,7 @@ import kkpyutil as util
 
 # project
 from wpe.util import *
+from wpe.project_config import ProjectConfig, PluginInfo
 
 _type_prefix_map = {
     'float': 'f',
@@ -203,27 +204,6 @@ Range: {self.minValue} - {self.maxValue} <br/>'''
             util.save_text(output_path, doc_str)
 
 
-class PluginInfo:
-    def __init__(self, info_dict: dict):
-        self.infoDict = info_dict
-        self.defaultPlatformSupport = '''<Platform Name="Any">
-  <CanBeInsertOnBusses>true</CanBeInsertOnBusses>
-  <CanBeInsertOnAudioObjects>true</CanBeInsertOnAudioObjects>
-  <CanBeRendered>true</CanBeRendered>
-</Platform>'''
-
-    def generate_platform_support(self) -> list[str]:
-        if not self.infoDict['platform_support']:
-            return self.defaultPlatformSupport.splitlines()
-        lines = []
-        for platform, config in self.infoDict['platform_support'].items():
-            lines.append(f'<Platform Name="{platform}">')
-            for key, value in config.items():
-                lines.append(f'  <{key}>{str(value).lower()}</{key}>')
-            lines.append('</Platform>')
-        return lines
-
-
 class ParameterGenerator:
     def __init__(self, path_man, is_forced=False):
         self.pathMan = path_man
@@ -236,22 +216,21 @@ class ParameterGenerator:
         self._generate()
 
     def load_parameter_config(self):
-        if not osp.isfile(self.pathMan.parameterConfig):
-            raise FileNotFoundError(f'Parameter config not found: {self.pathMan.parameterConfig}')
-        content = load_toml(self.pathMan.parameterConfig)
+        proj_config = ProjectConfig(self.pathMan)
+        proj_config.load()
 
         # load plugin info
-        self.pluginInfo = PluginInfo(content['plugin_info'])
+        self.pluginInfo = proj_config.plugin_info()
 
         # load parameters
-        if 'parameters' not in content:
+        if not proj_config.has_parameters():
             return
-        for name, define in content['parameters'].get('defines', {}).items():
+        for name, define in proj_config.parameter_defines().items():
             self.parameters[name] = Parameter.create(name, define)
-        for instance in content['parameters'].get('from_templates', []):
-            self.__load_with_template(instance, content['templates'])
-        for instance in content['parameters'].get('from_inner_types', []):
-            self.__load_with_inner_type(instance, content['inner_types'])
+        for instance in proj_config.parameter_from_templates():
+            self.__load_with_template(instance, proj_config.parameter_templates())
+        for instance in proj_config.parameter_from_inner_types():
+            self.__load_with_inner_type(instance, proj_config.parameter_inner_types())
         # link parameter dependency
         for i, param in enumerate(self.parameters.values()):
             param.assign_id(i)

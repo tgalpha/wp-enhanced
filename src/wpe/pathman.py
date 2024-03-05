@@ -15,11 +15,12 @@ class PathMan:
         self.pluginConfigHeader = osp.join(self.root, f'{self.pluginName}Config.h')
         self.pluginId = self.parse_plugin_id()
         self.configDir = osp.join(self.root, '.wpe')
+        self.projConfig = osp.join(self.configDir, 'wpe_project.toml')
+        # compatible with old version
         self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
         self.docsDir = osp.join(self.root, 'WwisePlugin/res/Md')
         self.distDir = osp.join(self.root, 'dist')
         self.hooksDir = osp.join(self.configDir, 'hooks')
-        self.buildNumberFile = osp.join(self.configDir, 'build_number')
 
     @staticmethod
     def find_premake_plugin_lua_in_ancestor_and_update_root(cwd):

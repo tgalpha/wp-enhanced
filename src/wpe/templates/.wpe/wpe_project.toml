@@ -1,3 +1,6 @@
+[project]
+version = 1
+
 [plugin_info.platform_support]
 [plugin_info.platform_support.Any]
 CanBeInsertOnBusses = true
