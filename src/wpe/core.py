@@ -13,6 +13,7 @@ from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
 from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
+from wpe.project_config import ProjectConfig
 
 
 class Worker:
@@ -69,6 +70,11 @@ class Worker:
             self.pack()
             hook_processor.process_post_hook('pack')
 
+        if self.args.bump:
+            hook_processor.process_pre_hook('bump')
+            self.bump()
+            hook_processor.process_post_hook('bump')
+
     def wp(self):
         logging.info('Run wp.py')
         self.wpWrapper.wp(self.args.wp)
@@ -115,10 +121,10 @@ class Worker:
 
         logging.info('Package plugin and generate bundle')
         version_code, build_number = self.wpWrapper.wwiseVersion.rsplit('.', 1)
-        if osp.isfile(self.pathMan.buildNumberFile):
-            build_number = util.load_json(self.pathMan.buildNumberFile) + 1
-        else:
-            build_number = 1
+        proj_config = ProjectConfig(self.pathMan)
+        proj_config.load()
+        build_number = proj_config.version()
+
         plugin_version = f'{version_code}.{build_number}'
         output_dir = osp.join(self.pathMan.distDir, f'{self.pathMan.pluginName}_v{version_code}_Build{build_number}')
         self.wpWrapper.package('Common', '-v', plugin_version)
@@ -128,8 +134,14 @@ class Worker:
         self.wpWrapper.generate_bundle('-v', plugin_version)
         _collect_packages(output_dir)
         _zip_bundle(output_dir)
-        util.save_json(self.pathMan.buildNumberFile, build_number)
         logging.info(f'Saved to {output_dir}')
+
+    def bump(self):
+        logging.info('Bump wpe project version')
+        proj_config = ProjectConfig(self.pathMan)
+        proj_config.load()
+        proj_config.bump()
+        logging.info(f'Version bumped to {proj_config.version()}')
 
     def _build(self):
         logging.info('Build authoring plugin')

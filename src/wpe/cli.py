@@ -82,6 +82,15 @@ def main():
         help='Package plugin.'
     )
 
+    command_group.add_argument(
+        '--bump',
+        action='store_true',
+        dest='bump',
+        default=False,
+        required=False,
+        help='Bump wpe project version.'
+    )
+
     parser.add_argument(
         '-H',
         '--with-hooks',
