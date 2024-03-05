@@ -1,6 +1,8 @@
 import logging
 import os.path as osp
 
+import kkpyutil as util
+
 # project
 from wpe.util import *
 from wpe.pathman import PathMan
@@ -43,6 +45,16 @@ class ProjectConfig:
             return
 
         raise FileNotFoundError(f'wpe project config not found: {self.pathMan.projConfig}')
+
+    def bump(self):
+        new_version = self.version() + 1
+        config_lines = util.load_lines(self.pathMan.projConfig)
+        for i, line in enumerate(config_lines):
+            if line.startswith('version = '):
+                config_lines[i] = f'version = {new_version}\n'
+                break
+        util.save_lines(self.pathMan.projConfig, config_lines)
+        self.load()
 
     def plugin_info(self) -> PluginInfo:
         return PluginInfo(self.config['plugin_info'])
