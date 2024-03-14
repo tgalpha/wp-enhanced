@@ -33,7 +33,7 @@ class PlatformTarget:
     def __init__(self, target_dict: dict):
         self.targetDict = target_dict
         self.platform: str = target_dict['platform']
-        self.architecture: str = target_dict['architecture']
+        self.architectures: list[str] = target_dict['architectures']
 
     def is_windows(self) -> bool:
         return self.platform.startswith('Windows')

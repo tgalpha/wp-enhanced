@@ -61,8 +61,10 @@ class WpWrapper:
             raise ValueError(f'Unknown subcommand: {subcommand}')
         return self.run(subcommand, *args[1:])
 
-    def build(self, *args):
-        res = self.run('build', *args)
+    @staticmethod
+    def build(*args):
+        import wpe.wp_patch.build as wpe_build
+        res = wpe_build.run(args)
         if res != 0:
             raise RuntimeError(f'Build failed. Exit code: {res}')
         return res
