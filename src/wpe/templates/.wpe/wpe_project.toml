@@ -1,5 +1,16 @@
 [project]
 version = 1
+targets = [
+    { platform = 'Authoring', architecture = 'x64', toolset = 'vc160' },
+    { platform = 'Windows_vc160', architecture = 'x64' },
+#    { platform = 'Android', architecture = 'arm64-v8a' },
+#    { platform = 'Android', architecture = 'armeabi-v7a' },
+#    { platform = 'Android', architecture = 'x86' },
+#    { platform = 'Android', architecture = 'x86_64' },
+#    { platform = 'iOS', architecture = 'x86_64' },
+#    { platform = 'iOS', architecture = 'arm64' },
+#    { platform = 'iOS', architecture = 'universal' },
+]
 
 [plugin_info.platform_support]
 [plugin_info.platform_support.Any]

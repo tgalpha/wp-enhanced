@@ -29,10 +29,32 @@ class PluginInfo:
         return lines
 
 
+class PlatformTarget:
+    def __init__(self, target_dict: dict):
+        self.targetDict = target_dict
+        self.platform: str = target_dict['platform']
+        self.architecture: str = target_dict['architecture']
+
+    def is_windows(self) -> bool:
+        return self.platform.startswith('Windows')
+
+    def is_authoring(self) -> bool:
+        return self.platform == 'Authoring'
+
+    def need_toolset(self) -> bool:
+        return self.is_windows() or self.is_authoring()
+
+    def toolset(self):
+        if ts := self.targetDict.get('toolset'):
+            return ts
+        return self.platform.split('_')[1] if self.is_windows() else None
+
+
 class ProjectConfig:
     def __init__(self, path_man: PathMan):
         self.pathMan = path_man
         self.config = None
+        self.load()
 
     def load(self):
         if osp.isfile(self.pathMan.projConfig):
@@ -55,6 +77,9 @@ class ProjectConfig:
                 break
         util.save_lines(self.pathMan.projConfig, config_lines)
         self.load()
+
+    def target_platforms(self) -> list[PlatformTarget]:
+        return [PlatformTarget(target) for target in self.config['project']['targets']]
 
     def plugin_info(self) -> PluginInfo:
         return PluginInfo(self.config['plugin_info'])

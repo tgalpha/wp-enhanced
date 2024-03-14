@@ -1,5 +1,6 @@
 import os
 import os.path as osp
+import platform
 
 import kkpyutil as util
 
@@ -10,6 +11,7 @@ class WpWrapper:
         self.wwiseSDKRoot: str = os.getenv('WWISESDK')
         self.wwiseVersion: str = self._load_wwise_version()
         self.wpScriptDir = osp.join(self.wwiseRoot, 'Scripts/Build/Plugins')
+        util.lazy_prepend_sys_path([self.wpScriptDir])
 
         self.subcommands = (
             'build',
@@ -40,6 +42,19 @@ class WpWrapper:
             if not osp.isfile((subcommand_file := osp.join(self.wpScriptDir, f'{subcommand}.py'))):
                 raise FileNotFoundError(f'Subcommand "{subcommand_file}" not found.')
 
+        self.create_sdk_symlink()
+
+    def create_sdk_symlink(self):
+        temp_sdk_dir = 'C:\\temp\\wpe\\WWISESDK' if platform.system() == 'Windows' else osp.expanduser('~/temp/wpe/WWISESDK')
+        if osp.exists(temp_sdk_dir):
+            if osp.islink(temp_sdk_dir):
+                os.remove(temp_sdk_dir)
+            else:
+                raise FileExistsError(f'{temp_sdk_dir} exists and is not a symlink to WWISESDK')
+        os.makedirs(osp.dirname(temp_sdk_dir), exist_ok=True)
+        os.symlink(self.wwiseSDKRoot, temp_sdk_dir)
+        os.environ['WWISESDK'] = temp_sdk_dir
+
     def wp(self, args):
         subcommand = args[0]
         if subcommand not in self.subcommands:
@@ -58,15 +73,17 @@ class WpWrapper:
     def new(self, *args):
         return self.run('new', *args)
 
-    def package(self, *args):
-        util.lazy_prepend_sys_path([self.wpScriptDir])
-        import wpe.wp_subcommand_patched.package as wsp_package
-        res = wsp_package.run(args)
-        util.lazy_remove_from_sys_path([self.wpScriptDir])
+    @staticmethod
+    def package(*args):
+        import wpe.wp_patch.package as wpe_package
+        res = wpe_package.run(args)
         return res
 
-    def premake(self, *args):
-        return self.run('premake', *args)
+    @staticmethod
+    def premake(*args):
+        import wpe.wp_patch.premake as wpe_premake
+        res = wpe_premake.run(args)
+        return res
 
     def run(self, subcommand, *args):
         subcommand_module = util.safe_import_module(osp.basename(subcommand), self.wpScriptDir)
