@@ -217,7 +217,6 @@ class ParameterGenerator:
 
     def load_parameter_config(self):
         proj_config = ProjectConfig(self.pathMan)
-        proj_config.load()
 
         # load plugin info
         self.pluginInfo = proj_config.plugin_info()

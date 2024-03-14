@@ -13,7 +13,7 @@ from wpe.pathman import PathMan
 from wpe.wp_wrapper import WpWrapper
 from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
-from wpe.project_config import ProjectConfig
+from wpe.project_config import ProjectConfig, PlatformTarget
 
 
 class Worker:
@@ -22,6 +22,9 @@ class Worker:
 
         self.wpWrapper = WpWrapper()
         self.pathMan = path_man
+
+        self.projConfig = None
+        self.targetPlatforms: list[PlatformTarget] = []
 
         self.terminatedWwise = False
 
@@ -34,6 +37,10 @@ class Worker:
 
     def _lazy_init_pathman(self):
         self.pathMan = self.pathMan or PathMan()
+        self.projConfig = ProjectConfig(self.pathMan)
+        self.targetPlatforms = self.projConfig.target_platforms()
+        if self.args.platform:
+            self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform == self.args.platform]
 
     def main(self):
         self.wpWrapper.validate_env()
@@ -70,6 +77,13 @@ class Worker:
             self.pack()
             hook_processor.process_post_hook('pack')
 
+        if self.args.fullPack:
+            hook_processor.process_pre_hook('build')
+            hook_processor.process_pre_hook('pack')
+            self.full_pack()
+            hook_processor.process_post_hook('build')
+            hook_processor.process_post_hook('pack')
+
         if self.args.bump:
             hook_processor.process_pre_hook('bump')
             self.bump()
@@ -97,7 +111,8 @@ class Worker:
 
     def premake(self):
         logging.info('Premake project')
-        self.wpWrapper.premake(self.args.platform)
+        for plt in self.targetPlatforms:
+            self.wpWrapper.premake(plt.platform)
 
     def generate_parameters(self):
         parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
@@ -121,31 +136,44 @@ class Worker:
 
         logging.info('Package plugin and generate bundle')
         version_code, build_number = self.wpWrapper.wwiseVersion.rsplit('.', 1)
-        proj_config = ProjectConfig(self.pathMan)
-        proj_config.load()
-        build_number = proj_config.version()
+        build_number = self.projConfig.version()
 
         plugin_version = f'{version_code}.{build_number}'
         output_dir = osp.join(self.pathMan.distDir, f'{self.pathMan.pluginName}_v{version_code}_Build{build_number}')
         self.wpWrapper.package('Common', '-v', plugin_version)
         self.wpWrapper.package('Documentation', '-v', plugin_version)
-        self.wpWrapper.package('Windows_vc160', '-v', plugin_version)
-        self.wpWrapper.package('Authoring', '-v', plugin_version)
+        for plt in self.targetPlatforms:
+            self.wpWrapper.package(plt.platform, '-v', plugin_version)
         self.wpWrapper.generate_bundle('-v', plugin_version)
         _collect_packages(output_dir)
         _zip_bundle(output_dir)
         logging.info(f'Saved to {output_dir}')
 
+    def full_pack(self):
+        for plt in self.targetPlatforms:
+            args = [plt.platform, '-c', 'Release', '-x', plt.architecture]
+            if plt.need_toolset():
+                args.extend(['-t', plt.toolset()])
+            self.wpWrapper.build(*args)
+            if plt.is_authoring():
+                continue
+            args[2] = 'Profile'
+            self.wpWrapper.build(*args)
+        self.pack()
+
     def bump(self):
         logging.info('Bump wpe project version')
-        proj_config = ProjectConfig(self.pathMan)
-        proj_config.load()
-        proj_config.bump()
-        logging.info(f'Version bumped to {proj_config.version()}')
+        self.projConfig.bump()
+        logging.info(f'Version bumped to {self.projConfig.version()}')
 
     def _build(self):
-        logging.info('Build authoring plugin')
-        self.wpWrapper.build('Authoring', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
+        logging.info('Build plugin')
+        for plt in self.targetPlatforms:
+            args = [plt.platform, '-c', self.args.configuration, '-x', plt.architecture]
+            if plt.need_toolset():
+                args.extend(['-t', plt.toolset()])
+            self.wpWrapper.build(*args)
+        self.wpWrapper.build('Documentation')
 
     def _terminate_wwise(self):
         raise NotImplementedError('subclass it')
@@ -157,11 +185,6 @@ class Worker:
 class WindowsWorker(Worker):
     def __init__(self, args):
         super().__init__(args)
-
-    def _build(self):
-        super()._build()
-        logging.info('Build shared plugin')
-        self.wpWrapper.build('Windows_vc160', '-c', self.args.configuration, '-x', 'x64', '-t', 'vc160')
 
     def _terminate_wwise(self):
         if self.args.force:

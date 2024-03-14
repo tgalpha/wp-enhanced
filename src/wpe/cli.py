@@ -83,6 +83,16 @@ def main():
     )
 
     command_group.add_argument(
+        '-FP',
+        '--full-pack',
+        action='store_true',
+        dest='fullPack',
+        default=False,
+        required=False,
+        help='Build Release&Profile for all platform and pack.'
+    )
+
+    command_group.add_argument(
         '--bump',
         action='store_true',
         dest='bump',
@@ -112,11 +122,11 @@ Hooks should:
         '-plt',
         '--platform',
         action='store',
-        choices=('Android', 'Authoring', 'Authoring_Windows', 'Authoring_Linux', 'Authoring_Mac', 'iOS', 'Linux', 'LinuxAuto', 'Mac', 'NX', 'PS4', 'PS5', 'QNX', 'tvOS', 'Windows_vc160', 'Windows_vc170', 'WinGC', 'XboxOneGC', 'XboxSeriesX'),
+        choices=('', 'Android', 'Authoring', 'Authoring_Windows', 'Authoring_Linux', 'Authoring_Mac', 'iOS', 'Linux', 'LinuxAuto', 'Mac', 'NX', 'PS4', 'PS5', 'QNX', 'tvOS', 'Windows_vc160', 'Windows_vc170', 'WinGC', 'XboxOneGC', 'XboxSeriesX'),
         dest='platform',
-        default='Authoring',
+        default='',
         required=False,
-        help='Platform to premake. Default value is Authoring.'
+        help='Platform to premake/build. Leave empty to premake/build all platforms defined in `wpe_project.toml`.'
     )
     parser.add_argument(
         '-c',
