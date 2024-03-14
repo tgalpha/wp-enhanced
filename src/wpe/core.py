@@ -111,8 +111,9 @@ class Worker:
 
     def premake(self):
         logging.info('Premake project')
-        for plt in self.targetPlatforms:
-            self.wpWrapper.premake(plt.platform)
+        platforms = set([plt.platform for plt in self.targetPlatforms])
+        for plt in platforms:
+            self.wpWrapper.premake(plt)
 
     def generate_parameters(self):
         parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
@@ -151,7 +152,7 @@ class Worker:
 
     def full_pack(self):
         for plt in self.targetPlatforms:
-            args = [plt.platform, '-c', 'Release', '-x', plt.architecture]
+            args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
             if plt.need_toolset():
                 args.extend(['-t', plt.toolset()])
             self.wpWrapper.build(*args)
@@ -169,7 +170,7 @@ class Worker:
     def _build(self):
         logging.info('Build plugin')
         for plt in self.targetPlatforms:
-            args = [plt.platform, '-c', self.args.configuration, '-x', plt.architecture]
+            args = [plt.platform, '-c', self.args.configuration, '-x'] + plt.architectures
             if plt.need_toolset():
                 args.extend(['-t', plt.toolset()])
             self.wpWrapper.build(*args)
