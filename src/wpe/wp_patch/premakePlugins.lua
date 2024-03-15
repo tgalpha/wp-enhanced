@@ -43,6 +43,7 @@ require ("Premake5Helper")
 
 -- [wp-enhanced patch]
 _AK_SDK_ROOT = os.getenv('WWISESDK') .. '/'
+_AK_WWISE_ROOT = os.getenv('WWISEROOT') .. '/'
 _AK_ROOT_DIR = AkMakeAbsolute(_AK_SDK_ROOT .. 'source/Build/')
 -- [/wp-enhanced patch]
 
@@ -73,7 +74,7 @@ local ActionToFolderName = function(action)
 end
 
 if _OPTIONS["authoring"] == "yes" then
-	authoringPath = AkRelativeToCwd(_AK_SDK_ROOT .. "../Authoring/")
+	authoringPath = AkRelativeToCwd(_AK_WWISE_ROOT .. "Authoring/")
 	wwisetarget_base = authoringPath .. ActionToFolderName(_ACTION) .. '/'
 	wa_debug_targetdir = wwisetarget_base .. "Debug/bin/Plugins"
 	wa_release_targetdir = wwisetarget_base .. "Release/bin/Plugins"
@@ -181,7 +182,7 @@ end
 function PremakePlugins.CreateAuthoring()
 	local platform = AK.Platform
 	local authoringLocation = AkRelativeToCwd(projectPath) .. "WwisePlugin/"
-	local authoringOutput = AkRelativeToCwd(_AK_SDK_ROOT .. "../Authoring/")
+	local authoringOutput = AkRelativeToCwd(_AK_WWISE_ROOT .. "Authoring/")
 	local authoringFileName = plugin.name .. "_Authoring_" .. platform.name .. actionsuffix
 	local targetDir = authoringOutput .. "$(Platform)/$(Configuration)/" .. "bin/Plugins"
 
