@@ -34,6 +34,8 @@ class Worker:
         system = platform.system()
         if system == 'Windows':
             return WindowsWorker(args)
+        if system == 'Darwin':
+            return MacWorker(args)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
     def _lazy_init_pathman(self):
