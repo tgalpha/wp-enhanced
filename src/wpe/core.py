@@ -26,6 +26,7 @@ class Worker:
         self.projConfig = None
         self.targetPlatforms: list[PlatformTarget] = []
 
+        self.wwiseProcName = ''
         self.terminatedWwise = False
 
     @staticmethod
@@ -177,7 +178,12 @@ class Worker:
         self.wpWrapper.build('Documentation')
 
     def _terminate_wwise(self):
-        raise NotImplementedError('subclass it')
+        if self.args.force:
+            try:
+                util.kill_process_by_name(self.wwiseProcName, forcekill=True)
+                self.terminatedWwise = True
+            except subprocess.CalledProcessError:
+                pass
 
     def _reopen_wwise(self):
         raise NotImplementedError('subclass it')
@@ -186,17 +192,20 @@ class Worker:
 class WindowsWorker(Worker):
     def __init__(self, args):
         super().__init__(args)
-
-    def _terminate_wwise(self):
-        if self.args.force:
-            cmd = ['taskkill', '/IM', 'wwise.exe', '/F']
-            try:
-                util.run_cmd(cmd)
-                self.terminatedWwise = True
-            except subprocess.CalledProcessError:
-                pass
+        self.wwiseProcName = 'Wwise.exe'
 
     def _reopen_wwise(self):
         if self.args.force and self.terminatedWwise:
             wwise_exe = osp.join(self.wpWrapper.wwiseRoot, 'Authoring/x64/Release/bin/Wwise.exe')
             util.run_daemon([wwise_exe])
+
+
+class MacWorker(Worker):
+    def __init__(self, args):
+        super().__init__(args)
+        self.wwiseProcName = 'wine64-preloader'
+
+    def _reopen_wwise(self):
+        if self.args.force and self.terminatedWwise:
+            wwise_app = osp.join(self.wpWrapper.wwiseRoot, 'Wwise.app')
+            util.run_daemon(['open', wwise_app])
