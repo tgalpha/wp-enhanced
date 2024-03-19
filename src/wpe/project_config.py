@@ -1,5 +1,6 @@
 import logging
 import os.path as osp
+import platform
 
 import kkpyutil as util
 
@@ -79,7 +80,8 @@ class ProjectConfig:
         self.load()
 
     def target_platforms(self) -> list[PlatformTarget]:
-        return [PlatformTarget(target) for target in self.config['project']['targets']]
+        platform_targets_key = 'win_targets' if platform.system() == 'Windows' else 'mac_targets'
+        return [PlatformTarget(target) for target in self.config['project'][platform_targets_key]]
 
     def plugin_info(self) -> PluginInfo:
         return PluginInfo(self.config['plugin_info'])
