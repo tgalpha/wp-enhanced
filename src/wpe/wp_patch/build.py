@@ -57,9 +57,11 @@ def run(argv):
 
     invalid_archs = set(args.archs) - set(platform_info.build.archs)
     if invalid_archs:
-        print("error: Invalid architecture(s) '{}' for target {}.".format(invalid_archs, platform_info.name))
+        print("warning: Skipped invalid architecture(s) '{}' for target {}.".format(invalid_archs, platform_info.name))
         print("supported architectures: {}".format(', '.join(platform_info.build.archs)))
-        return 1
+        args.archs = list(set(args.archs) - invalid_archs)
+        if not args.archs:
+            return 0
 
     if not args.toolset:
         if platform_info.build.require_toolset:
