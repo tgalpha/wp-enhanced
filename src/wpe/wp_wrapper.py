@@ -1,4 +1,3 @@
-import logging
 import os
 import os.path as osp
 import platform
@@ -80,9 +79,6 @@ class WpWrapper:
     @inject_wwise_sdk_for_android
     def build(*args):
         import wpe.wp_patch.build as wpe_build
-        if (plt := args[0]) not in wpe_build.SUPPORTED_PLATFORMS:
-            logging.info(f'Skip build for unsupported platform: {plt}')
-            return 0
         res = wpe_build.run(args)
         if res != 0:
             raise RuntimeError(f'Build failed. Exit code: {res}')
