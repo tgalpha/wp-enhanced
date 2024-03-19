@@ -6,11 +6,30 @@ import kkpyutil as util
 from wpe.pathman import PathMan
 
 
+@util.SingletonDecorator
 class HookProcessor:
-    def __init__(self, path_man: PathMan, build_config: str, target_hooks: list[str]):
+    def __init__(self):
+        self.pathMan = None
+        self.buildConfig = None
+        self.targetHooks = None
+
+    def init(self, path_man: PathMan, build_config: str, target_hooks: list[str]):
         self.pathMan = path_man
         self.buildConfig = build_config
         self.targetHooks = target_hooks
+
+    def register(self, command):
+        """
+        return a decorator that wraps the function to run pre&post hooks
+        """
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                self.process_pre_hook(command)
+                res = func(*args, **kwargs)
+                self.process_post_hook(command)
+                return res
+            return wrapper
+        return decorator
 
     def process_pre_hook(self, command):
         self._process_hook('pre', command)

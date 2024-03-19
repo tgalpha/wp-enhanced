@@ -21,8 +21,9 @@ class Worker:
         self.args = args
 
         self.wpWrapper = WpWrapper()
-        self.pathMan = path_man
 
+        # lazy inits
+        self.pathMan = path_man
         self.projConfig = None
         self.targetPlatforms: list[PlatformTarget] = []
 
@@ -44,6 +45,7 @@ class Worker:
         self.targetPlatforms = self.projConfig.target_platforms()
         if self.args.platform:
             self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform == self.args.platform]
+        HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
 
     def main(self):
         self.wpWrapper.validate_env()
@@ -59,38 +61,23 @@ class Worker:
         if self.args.initWpe:
             return self.init_wpe()
 
-        hook_processor = HookProcessor(self.pathMan, self.args.configuration, self.args.withHooks)
         if self.args.premake:
-            hook_processor.process_pre_hook('premake')
             self.premake()
-            hook_processor.process_post_hook('premake')
 
         if self.args.generateParameters:
-            hook_processor.process_pre_hook('generate_parameters')
             self.generate_parameters()
-            hook_processor.process_post_hook('generate_parameters')
 
         if self.args.build:
-            hook_processor.process_pre_hook('build')
             self.build()
-            hook_processor.process_post_hook('build')
 
         if self.args.pack:
-            hook_processor.process_pre_hook('pack')
             self.pack()
-            hook_processor.process_post_hook('pack')
 
         if self.args.fullPack:
-            hook_processor.process_pre_hook('build')
-            hook_processor.process_pre_hook('pack')
             self.full_pack()
-            hook_processor.process_post_hook('build')
-            hook_processor.process_post_hook('pack')
 
         if self.args.bump:
-            hook_processor.process_pre_hook('bump')
             self.bump()
-            hook_processor.process_post_hook('bump')
 
     def wp(self):
         logging.info('Run wp.py')
@@ -112,22 +99,26 @@ class Worker:
             osp.join(self.pathMan.configDir)
         )
 
+    @HookProcessor().register('premake')
     def premake(self):
         logging.info('Premake project')
         platforms = set([plt.platform for plt in self.targetPlatforms])
         for plt in platforms:
             self.wpWrapper.premake(plt)
 
+    @HookProcessor().register('generate_parameters')
     def generate_parameters(self):
         parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
         parameter_manager.main()
         self.wpWrapper.build('Documentation')
 
+    @HookProcessor().register('build')
     def build(self):
         self._terminate_wwise()
         self._build()
         self._reopen_wwise()
 
+    @HookProcessor().register('pack')
     def pack(self):
         def _collect_packages(_output_dir):
             util.remove_tree(_output_dir)
@@ -154,6 +145,7 @@ class Worker:
         logging.info(f'Saved to {output_dir}')
 
     def full_pack(self):
+        HookProcessor().process_pre_hook('build')
         for plt in self.targetPlatforms:
             args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
             if plt.need_toolset():
@@ -163,8 +155,10 @@ class Worker:
                 continue
             args[2] = 'Profile'
             self.wpWrapper.build(*args)
+        HookProcessor().process_post_hook('build')
         self.pack()
 
+    @HookProcessor().register('bump')
     def bump(self):
         logging.info('Bump wpe project version')
         self.projConfig.bump()
