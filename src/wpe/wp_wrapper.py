@@ -5,6 +5,33 @@ import platform
 import kkpyutil as util
 
 
+def create_sdk_symlink(wwise_sdk):
+    temp_sdk_dir = 'C:\\temp\\wpe\\WWISESDK' if platform.system() == 'Windows' else osp.expanduser(
+        '~/temp/wpe/WWISESDK')
+    if osp.exists(temp_sdk_dir):
+        if osp.islink(temp_sdk_dir):
+            os.remove(temp_sdk_dir)
+        else:
+            raise FileExistsError(f'{temp_sdk_dir} exists and is not a symlink to WWISESDK')
+    os.makedirs(osp.dirname(temp_sdk_dir), exist_ok=True)
+    os.symlink(wwise_sdk, temp_sdk_dir)
+    return temp_sdk_dir
+
+
+def inject_wwise_sdk_for_android(func):
+    def wrapper(*args, **kwargs):
+        plt = args[0] if args else ''
+        if plt != 'Android':
+            return func(*args, **kwargs)
+        org_sdk_dir = os.getenv('WWISESDK')
+        temp_sdk_dir = create_sdk_symlink(org_sdk_dir)
+        os.environ['WWISESDK'] = temp_sdk_dir
+        res = func(*args, **kwargs)
+        os.environ['WWISESDK'] = org_sdk_dir
+        return res
+    return wrapper
+
+
 class WpWrapper:
     def __init__(self):
         self.wwiseRoot: str = os.getenv('WWISEROOT')
@@ -42,19 +69,6 @@ class WpWrapper:
             if not osp.isfile((subcommand_file := osp.join(self.wpScriptDir, f'{subcommand}.py'))):
                 raise FileNotFoundError(f'Subcommand "{subcommand_file}" not found.')
 
-        self.create_sdk_symlink()
-
-    def create_sdk_symlink(self):
-        temp_sdk_dir = 'C:\\temp\\wpe\\WWISESDK' if platform.system() == 'Windows' else osp.expanduser('~/temp/wpe/WWISESDK')
-        if osp.exists(temp_sdk_dir):
-            if osp.islink(temp_sdk_dir):
-                os.remove(temp_sdk_dir)
-            else:
-                raise FileExistsError(f'{temp_sdk_dir} exists and is not a symlink to WWISESDK')
-        os.makedirs(osp.dirname(temp_sdk_dir), exist_ok=True)
-        os.symlink(self.wwiseSDKRoot, temp_sdk_dir)
-        os.environ['WWISESDK'] = temp_sdk_dir
-
     def wp(self, args):
         subcommand = args[0]
         if subcommand not in self.subcommands:
@@ -62,6 +76,7 @@ class WpWrapper:
         return self.run(subcommand, *args[1:])
 
     @staticmethod
+    @inject_wwise_sdk_for_android
     def build(*args):
         import wpe.wp_patch.build as wpe_build
         res = wpe_build.run(args)
@@ -82,6 +97,7 @@ class WpWrapper:
         return res
 
     @staticmethod
+    @inject_wwise_sdk_for_android
     def premake(*args):
         import wpe.wp_patch.premake as wpe_premake
         res = wpe_premake.run(args)
