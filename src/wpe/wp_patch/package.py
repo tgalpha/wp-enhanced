@@ -130,7 +130,8 @@ def run(argv):
 
         artifacts_found, artifacts_found_in_project = find_artifacts(args)
         if not artifacts_found and not artifacts_found_in_project:
-            exit_with_error("Nothing to package!")
+            print("Nothing to package!")
+            return 0
 
         formatted_plugin_version = "v{}.{}.{}_Build{}".format(
             args.version.year, args.version.major, args.version.minor, args.version.build)
