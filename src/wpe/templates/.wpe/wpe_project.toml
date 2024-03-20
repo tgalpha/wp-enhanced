@@ -1,9 +1,12 @@
 [project]
 version = 1
-targets = [
+win_targets = [
     { platform = 'Authoring', architectures = ['x64'], toolset = 'vc160' },
     { platform = 'Windows_vc160', architectures = ['x64'] },
     { platform = 'Android', architectures = ['arm64-v8a', 'armeabi-v7a'] },
+]
+mac_targets = [
+    { platform = 'Authoring', architectures = ['universal'] },
     { platform = 'iOS', architectures = ['iOS'] },
 ]
 
