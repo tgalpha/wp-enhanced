@@ -184,7 +184,9 @@ function PremakePlugins.CreateAuthoring()
 	local authoringLocation = AkRelativeToCwd(projectPath) .. "WwisePlugin/"
 	local authoringOutput = AkRelativeToCwd(_AK_WWISE_ROOT .. "Authoring/")
 	local authoringFileName = plugin.name .. "_Authoring_" .. platform.name .. actionsuffix
-	local targetDir = authoringOutput .. "$(Platform)/$(Configuration)/" .. "bin/Plugins"
+-- 	[wp-enhanced patch] Always output to release dir for authoring
+	local targetDir = authoringOutput .. "$(Platform)/Release/" .. "bin/Plugins"
+-- 	[/wp-enhanced patch]
 
 	PremakePlugins.CreateProject(plugin.name, authoringFileName, plugin.authoring, authoringLocation, "SharedLib")
 
