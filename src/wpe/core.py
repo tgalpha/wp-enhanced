@@ -3,6 +3,7 @@ import os.path as osp
 import platform
 import subprocess
 import glob
+from typing import Optional
 
 # 3rd party
 import kkpyutil as util
@@ -23,8 +24,8 @@ class Worker:
         self.wpWrapper = WpWrapper()
 
         # lazy inits
-        self.pathMan = path_man
-        self.projConfig = None
+        self.pathMan: Optional[PathMan] = path_man
+        self.projConfig: Optional[ProjectConfig] = None
         self.targetPlatforms: list[PlatformTarget] = []
 
         self.wwiseProcName = ''
@@ -137,8 +138,8 @@ class Worker:
         output_dir = osp.join(self.pathMan.distDir, f'{self.pathMan.pluginName}_v{version_code}_Build{build_number}')
         self.wpWrapper.package('Common', '-v', plugin_version)
         self.wpWrapper.package('Documentation', '-v', plugin_version)
-        for plt in self.targetPlatforms:
-            self.wpWrapper.package(plt.platform, '-v', plugin_version)
+        for plt in self.projConfig.all_platforms():
+            self.wpWrapper.package(plt, '-v', plugin_version)
         self.wpWrapper.generate_bundle('-v', plugin_version)
         _collect_packages(output_dir)
         _zip_bundle(output_dir)
