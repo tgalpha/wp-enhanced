@@ -44,8 +44,8 @@ class Worker:
         self.pathMan = self.pathMan or PathMan()
         self.projConfig = ProjectConfig(self.pathMan)
         self.targetPlatforms = self.projConfig.target_platforms()
-        if self.args.platform:
-            self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform == self.args.platform]
+        if self.args.platforms:
+            self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform in self.args.platforms]
         HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
 
     def main(self):
