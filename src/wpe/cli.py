@@ -120,13 +120,16 @@ Hooks should:
 
     parser.add_argument(
         '-plt',
-        '--platform',
+        '--platforms',
         action='store',
-        choices=('', 'Android', 'Authoring', 'Authoring_Windows', 'Authoring_Linux', 'Authoring_Mac', 'iOS', 'Linux', 'LinuxAuto', 'Mac', 'NX', 'PS4', 'PS5', 'QNX', 'tvOS', 'Windows_vc160', 'Windows_vc170', 'WinGC', 'XboxOneGC', 'XboxSeriesX'),
-        dest='platform',
-        default='',
+        choices=['Android', 'Authoring', 'Authoring_Windows', 'Authoring_Linux', 'Authoring_Mac', 'iOS', 'Linux',
+                 'LinuxAuto', 'Mac', 'NX', 'PS4', 'PS5', 'QNX', 'tvOS', 'Windows_vc140', 'Windows_vc150',
+                 'Windows_vc160', 'Windows_vc170', 'WinGC', 'XboxOneGC', 'XboxSeriesX'],
+        dest='platforms',
+        default=[],
+        nargs='*',
         required=False,
-        help='Platform to premake/build. Leave empty to premake/build all platforms defined in `wpe_project.toml`.'
+        help='Platforms to premake/build. Leave empty to premake/build all platforms defined in `wpe_project.toml`.'
     )
     parser.add_argument(
         '-c',
