@@ -73,6 +73,16 @@ def main():
     )
 
     command_group.add_argument(
+        '-t',
+        '--test',
+        action='store_true',
+        dest='test',
+        default=False,
+        required=False,
+        help='Test plugin with catch2 framework.'
+    )
+
+    command_group.add_argument(
         '-P',
         '--pack',
         action='store_true',
@@ -154,7 +164,7 @@ Hooks should:
     )
 
     parsed_args = parser.parse_args()
-    worker = Worker.get_platform_worker(parsed_args)
+    worker = Worker.create_platform(parsed_args)
     worker.main()
 
 
