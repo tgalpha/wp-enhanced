@@ -40,7 +40,7 @@ class Worker:
             return MacWorker(args)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
-    def _lazy_init_pathman(self):
+    def _lazy_init_configs(self):
         self.pathMan = self.pathMan or PathMan()
         self.projConfig = ProjectConfig(self.pathMan)
         self.targetPlatforms = self.projConfig.target_platforms()
@@ -57,7 +57,7 @@ class Worker:
         if self.args.new:
             return self.new()
 
-        self._lazy_init_pathman()
+        self._lazy_init_configs()
 
         if self.args.initWpe:
             return self.init_wpe()
@@ -93,7 +93,8 @@ class Worker:
 
     def init_wpe(self):
         logging.info('Initialize wpe project config')
-        self._lazy_init_pathman()
+        self.pathMan = self.pathMan or PathMan()
+        HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
 
         wpe_util.overwrite_copy(
             osp.join(self.pathMan.templatesDir, '.wpe'),
