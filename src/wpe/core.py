@@ -15,6 +15,7 @@ from wpe.wp_wrapper import WpWrapper
 from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
 from wpe.project_config import ProjectConfig, PlatformTarget
+from wpe.test_runner import TestRunner
 
 
 class Worker:
@@ -32,7 +33,7 @@ class Worker:
         self.terminatedWwise = False
 
     @staticmethod
-    def get_platform_worker(args):
+    def create_platform(args):
         system = platform.system()
         if system == 'Windows':
             return WindowsWorker(args)
@@ -40,7 +41,7 @@ class Worker:
             return MacWorker(args)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
-    def _lazy_init_pathman(self):
+    def _lazy_init_configs(self):
         self.pathMan = self.pathMan or PathMan()
         self.projConfig = ProjectConfig(self.pathMan)
         self.targetPlatforms = self.projConfig.target_platforms()
@@ -57,7 +58,7 @@ class Worker:
         if self.args.new:
             return self.new()
 
-        self._lazy_init_pathman()
+        self._lazy_init_configs()
 
         if self.args.initWpe:
             return self.init_wpe()
@@ -70,6 +71,9 @@ class Worker:
 
         if self.args.build:
             self.build()
+
+        if self.args.test:
+            self.test()
 
         if self.args.pack:
             self.pack()
@@ -93,7 +97,8 @@ class Worker:
 
     def init_wpe(self):
         logging.info('Initialize wpe project config')
-        self._lazy_init_pathman()
+        self.pathMan = self.pathMan or PathMan()
+        HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
 
         wpe_util.overwrite_copy(
             osp.join(self.pathMan.templatesDir, '.wpe'),
@@ -118,6 +123,16 @@ class Worker:
         self._terminate_wwise()
         self._build()
         self._reopen_wwise()
+
+    @HookProcessor().register('test')
+    def test(self):
+        # self.args.configuration = 'Release'
+        # self.targetPlatforms = [PlatformTarget({
+        #     'platform': 'Windows_vc160',
+        #     'architectures': ['x64'],
+        # })]
+        # self.build()
+        TestRunner.create_platform(self.pathMan).main()
 
     @HookProcessor().register('pack')
     def pack(self):
