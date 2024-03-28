@@ -1,12 +1,12 @@
 import logging
 import os.path as osp
 import platform
-import re
 
 import kkpyutil as util
 import requests
 
 from wpe.pathman import PathMan
+from wpe.util import overwrite_copy, remove_ansi_color
 
 
 class TestRunner:
@@ -38,13 +38,13 @@ class TestRunner:
                 util.save_text(osp.join(catch2_dir, file), res.text)
 
         def lazy_copy_test_src():
-            test_src_files = ['CMakeLists.txt', 'main.cpp', '.gitignore']
-            if all(osp.isfile(osp.join(self.pathMan.testDir, f)) for f in test_src_files):
+            test_src_files = ['CMakeLists.txt', 'main.cpp', '.gitignore', 'util']
+            if all(osp.exists(osp.join(self.pathMan.testDir, p)) for p in test_src_files):
                 return
             logging.info('copying test source files')
             test_templates_dir = osp.join(self.pathMan.templatesDir, 'test')
             for file in test_src_files:
-                util.copy_file(osp.join(test_templates_dir, file), osp.join(self.pathMan.testDir, file))
+                overwrite_copy(osp.join(test_templates_dir, file), osp.join(self.pathMan.testDir, file))
 
             util.substitute_keywords_in_file(osp.join(self.pathMan.testDir, 'CMakeLists.txt'), {
                 'name': self.pathMan.pluginName,
@@ -119,6 +119,6 @@ class _WindowsTestRunner(TestRunner):
             ],
             cwd=self.pathMan.testDir
         )
-        log_lines.extend(test_proc.stdout.decode(util.LOCALE_CODEC).splitlines())
+        log_lines.extend(remove_ansi_color(test_proc.stdout.decode(util.LOCALE_CODEC)).splitlines())
 
         util.save_lines(osp.join(self.pathMan.testDir, 'test_benchmark_report.txt'), log_lines, addlineend=True)
