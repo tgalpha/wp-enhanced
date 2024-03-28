@@ -1,3 +1,4 @@
+import re
 import tomllib
 import os.path as osp
 from distutils.dir_util import copy_tree
@@ -32,3 +33,8 @@ def load_toml(path):
 
 def replace_in_basename(path: str, old: str, new: str):
     return osp.join(osp.dirname(path), osp.basename(path).replace(old, new))
+
+
+def remove_ansi_color(text):
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)

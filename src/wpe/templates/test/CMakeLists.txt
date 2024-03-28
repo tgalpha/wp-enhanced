@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Define NOMINMAX to fix failure with MSVC: https://github.com/catchorg/Catch2/pull/2702#issuecomment-1586336031
 add_compile_definitions(CATCH_CONFIG_ENABLE_BENCHMARKING NOMINMAX)
 
-include_directories(%(test_util)s)
+include_directories(./util)
 include_directories(../SoundEnginePlugin)
 include_directories($ENV{WWISESDK}/include)
 
