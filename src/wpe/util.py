@@ -10,6 +10,7 @@ __all__ = [
     'path_is_under',
     'load_toml',
     'replace_in_basename',
+    'remove_ansi_color'
 ]
 
 
