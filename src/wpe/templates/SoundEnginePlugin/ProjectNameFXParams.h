@@ -38,6 +38,15 @@ static const AkPluginParamID PARAM_PLACEHOLDER_ID = 0;
 static const AkUInt32 NUM_PARAMS = 1;
 // [/ParameterID]
 
+// [InnerTypes]
+// [/InnerTypes]
+
+struct %(name)sInnerTypeParams
+{
+    // [InnerTypeDeclaration]
+    // [/InnerTypeDeclaration]
+};
+
 struct %(name)sRTPCParams
 {
     // [RTPCDeclaration]
@@ -77,6 +86,7 @@ struct %(name)sFXParams
 
     AK::AkFXParameterChangeHandler<NUM_PARAMS>* GetParamChangeHandler() { return &m_paramChangeHandler; }
 
+    %(name)sInnerTypeParams InnerType;
     %(name)sRTPCParams RTPC;
     %(name)sNonRTPCParams NonRTPC;
 

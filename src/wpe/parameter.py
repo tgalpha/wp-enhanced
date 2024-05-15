@@ -4,6 +4,7 @@ import os.path as osp
 from typing import Any, Optional
 from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
+from collections import OrderedDict
 
 import kkpyutil as util
 
@@ -38,6 +39,36 @@ def auto_add_line_end(lines: list[str]):
 
 
 @dataclass
+class InnerType:
+    name: str
+    fields: list['Parameter']
+
+    def __post_init__(self):
+        self.structName = util.convert_compound_cases(self.name)
+
+    @staticmethod
+    def create(name, dict_define: dict[str, Any]):
+        instance = InnerType(
+            name=name,
+            fields=[Parameter.create(name, defines) for name, defines in dict_define.items()],
+        )
+        return instance
+
+    def generate_struct_defines(self):
+        return f'''struct {self.structName}
+{{
+    {self.__generate_field_lines()}
+}};'''
+
+    def __generate_field_lines(self):
+        lines = []
+        for type_field in self.fields:
+            type_field.generate_names()
+            lines.append(type_field.generate_declaration())
+        return '\n    '.join(lines)
+
+
+@dataclass
 class Parameter:
     name: str
     type_: str
@@ -51,19 +82,23 @@ class Parameter:
     enumeration: list[dict] = field(default_factory=list)
     userInterface: dict = field(default_factory=dict)
     id: int = 0
+    parent: Optional[InnerType] = None
+    basename: str = ''
+    suffix: str = ''
 
-    def __post_init__(self):
+    def generate_names(self):
         if self.type_ == 'bool':
             self.defaultValue = str(self.defaultValue).lower()
             self.minValue = 'false'
             self.maxValue = 'true'
         self.propertyName = util.convert_compound_cases(self.name)
-        self.cppVariableName = _type_prefix_map[self.type_] + self.propertyName
+        self.cppVariableName = _type_prefix_map[self.type_] + util.convert_compound_cases(self.basename or self.propertyName)
         self.paramIDName = f'PARAM_{self.name.upper()}_ID'
         self.typeName = _wwise_type_name_map[self.type_]
         self.xmlTypeName = _xml_type_name_map[self.type_]
-        self.struct = 'RTPC' if self.rtpc else 'NonRTPC'
+        self.struct = 'InnerType' if self.parent else ('RTPC' if self.rtpc else 'NonRTPC')
         self.displayName = self.displayName or util.convert_compound_cases(self.name, style='title')
+        self.nameSpace = f'{self.struct}.{self.parent.name}{self.suffix}' if self.parent else self.struct
 
     def assign_id(self, _id: int):
         self.id = _id
@@ -78,7 +113,7 @@ class Parameter:
             minValue=dict_define.get('min_value', None),
             maxValue=dict_define.get('max_value', None),
             description=dict_define.get('description', []),
-            dependencies=dict_define.get('dependencies', []),
+            dependencies=copy.deepcopy(dict_define.get('dependencies', [])),
             displayName=dict_define.get('display_name', ''),
             enumeration=dict_define.get('enumeration', []),
             userInterface=dict_define.get('user_interface', '')
@@ -88,19 +123,21 @@ class Parameter:
         return f'static constexpr AkPluginParamID {self.paramIDName} = {self.id};'
 
     def generate_declaration(self) -> str:
+        if self.parent:
+            return f'{self.parent.structName} {self.parent.name}{self.suffix};'
         return f'{self.typeName} {self.cppVariableName};'
 
     def generate_init(self) -> str:
-        return f'{self.struct}.{self.cppVariableName} = {self.defaultValue};'
+        return f'{self.nameSpace}.{self.cppVariableName} = {self.defaultValue};'
 
     def generate_read_bank_data(self) -> str:
-        return f'{self.struct}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
+        return f'{self.nameSpace}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
 
     def generate_set_parameter(self) -> str:
         need_reinterpret = self.typeName != 'AkReal32' and self.rtpc
         interpret_pointer = f'static_cast<{self.typeName}>(*(AkReal32*)in_pValue)' if need_reinterpret else f'*(({self.typeName}*)in_pValue)'
         return f'''    case {self.paramIDName}:
-        {self.struct}.{self.cppVariableName} = {interpret_pointer};
+        {self.nameSpace}.{self.cppVariableName} = {interpret_pointer};
         m_paramChangeHandler.SetParamChange({self.paramIDName});
         break;'''
 
@@ -208,6 +245,7 @@ class ParameterGenerator:
     def __init__(self, path_man, is_forced=False):
         self.pathMan = path_man
         self.isForced = is_forced
+        self.innerTypes: dict[str, InnerType] = {}
         self.parameters: dict[str, Parameter] = {}
         self.pluginInfo: Optional[PluginInfo] = None
 
@@ -228,11 +266,14 @@ class ParameterGenerator:
             self.parameters[name] = Parameter.create(name, define)
         for instance in proj_config.parameter_from_templates():
             self.__load_with_template(instance, proj_config.parameter_templates())
+        self.innerTypes = {name: InnerType.create(name, dict_define) for name, dict_define in proj_config.parameter_inner_types().items()}
         for instance in proj_config.parameter_from_inner_types():
-            self.__load_with_inner_type(instance, proj_config.parameter_inner_types())
-        # link parameter dependency
+            self.__load_with_inner_type(instance)
+
         for i, param in enumerate(self.parameters.values()):
             param.assign_id(i)
+            param.generate_names()
+            # link parameter dependency
             for dep in param.dependencies:
                 dep['obj'] = self.parameters[dep['name']]
 
@@ -267,9 +308,12 @@ class ParameterGenerator:
             target = 'SoundEnginePlugin/ProjectNameFXParams.h'
             dst = _copy_template(target)
             util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
-            util.substitute_lines_in_file(self.__generate_declarations(rtpc=True), dst, '// [RTPCDeclaration]',
+            util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
+            util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
+                                          '// [/InnerTypeDeclaration]')
+            util.substitute_lines_in_file(self.__generate_declarations(struct='RTPC'), dst, '// [RTPCDeclaration]',
                                           '// [/RTPCDeclaration]')
-            util.substitute_lines_in_file(self.__generate_declarations(rtpc=False), dst, '// [NonRTPCDeclaration]',
+            util.substitute_lines_in_file(self.__generate_declarations(struct='NonRTPC'), dst, '// [NonRTPCDeclaration]',
                                           '// [/NonRTPCDeclaration]')
 
         def _generate_fx_params_cpp():
@@ -322,6 +366,12 @@ class ParameterGenerator:
         lines.append(f'static constexpr AkUInt32 NUM_PARAMS = {len(self.parameters)};')
         return auto_add_line_end(lines)
 
+    def __generate_inner_types(self):
+        lines = []
+        for i, inner_type in enumerate(self.innerTypes.values()):
+            lines.append(inner_type.generate_struct_defines())
+        return auto_add_line_end(lines)
+
     def __load_with_template(self, instance, templates):
         template = copy.deepcopy(templates[instance['template']])
         for key, value in instance.get('override', {}).items():
@@ -332,25 +382,31 @@ class ParameterGenerator:
         name = f"{instance['template']}_{instance['suffix']}"
         self.parameters[name] = Parameter.create(name, template)
 
-    def __load_with_inner_type(self, instance, inner_types):
-        inner_type = inner_types[instance['inner_type']]
-        overrides = instance.get('overrides', {})
+    def __load_with_inner_type(self, define):
+        inner_type = self.innerTypes[define['inner_type']]
+        overrides = define.get('overrides', {})
 
-        for field_name, template in inner_type.items():
-            template = copy.deepcopy(template)
+        for type_field in inner_type.fields:
+            field_name = type_field.name
+            instance = copy.deepcopy(type_field)
             if field_name in overrides:
-                template['default_value'] = overrides[field_name]
-            for dep in template.get('dependencies', []):
-                dep['name'] = f"{instance['inner_type']}_{dep['name'] % {'suffix': instance['suffix']}}"
+                instance.defaultValue = overrides[field_name]
+            for dep in instance.dependencies:
+                dep['name'] = f"{inner_type.name}_{dep['name'] % {'suffix': define['suffix']}}"
 
-            name = f"{instance['inner_type']}_{field_name}_{instance['suffix']}"
-            self.parameters[name] = Parameter.create(name, template)
+            instance.name = f"{inner_type.name}_{field_name}_{define['suffix']}"
+            instance.basename = field_name
+            instance.parent = inner_type
+            instance.suffix = define['suffix']
+            self.parameters[instance.name] = instance
 
-    def __generate_declarations(self, rtpc=True):
+    def __generate_declarations(self, struct):
         lines = []
         for param in self.parameters.values():
-            if param.rtpc == rtpc:
+            if param.struct == struct:
                 lines.append(param.generate_declaration())
+        # remove duplicate lines(when inner type is used)
+        lines = list(OrderedDict.fromkeys(lines).keys())
         return auto_add_line_end(lines)
 
     def __generate_init(self):
