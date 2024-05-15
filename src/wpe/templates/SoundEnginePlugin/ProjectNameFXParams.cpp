@@ -39,6 +39,7 @@ the specific language governing permissions and limitations under the License.
 
 %(name)sFXParams::%(name)sFXParams(const %(name)sFXParams& in_rParams)
 {
+    InnerType = in_rParams.InnerType;
     RTPC = in_rParams.RTPC;
     NonRTPC = in_rParams.NonRTPC;
     m_paramChangeHandler.SetAllParamChanges();
