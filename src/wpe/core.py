@@ -120,6 +120,10 @@ class Worker:
 
     @HookProcessor().register('generate_parameters')
     def generate_parameters(self):
+        def clear_existing_doc():
+            util.remove_tree(self.pathMan.docsDir)
+            util.remove_tree(self.pathMan.htmlDocsDir)
+        clear_existing_doc()
         parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
         parameter_manager.main()
         self.wpWrapper.build('Documentation')

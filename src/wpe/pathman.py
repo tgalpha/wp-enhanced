@@ -20,6 +20,7 @@ class PathMan:
         # compatible with old version
         self.parameterConfig = osp.join(self.configDir, 'wpe_parameters.toml')
         self.docsDir = osp.join(self.root, 'WwisePlugin/res/Md')
+        self.htmlDocsDir = osp.join(self.root, 'WwisePlugin/res/Html')
         self.distDir = osp.join(self.root, 'dist')
         self.testDir = osp.join(self.root, 'test')
         self.hooksDir = osp.join(self.configDir, 'hooks')
