@@ -31,13 +31,6 @@ _xml_type_name_map = {
 }
 
 
-def auto_add_line_end(lines: list[str]):
-    for i, line in enumerate(lines):
-        if not line.endswith('\n'):
-            lines[i] += '\n'
-    return lines
-
-
 @dataclass
 class InnerType:
     name: str
@@ -177,7 +170,7 @@ class Parameter:
                     max_value.text = str(dep['max'])
             ET.indent(dependencies_element)
             return '\n' + ET.tostring(dependencies_element).decode(util.TXT_CODEC)
-        support_rtpc_type = 'SupportRTPCType="Exclusive"' if self.rtpc else ''
+        support_rtpc_type = 'SupportRTPCType="Additive"' if self.rtpc else ''
 
         def _generate_bool_gui_lines():
             return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
@@ -188,7 +181,11 @@ class Parameter:
         def _generate_int_gui_lines():
             user_interface = self.userInterface
             if not self.enumeration:
-                raise ValueError(f'Parameter "{self.name}" is int type but no enumeration provided. Please provide enumeration field with string list.')
+                return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+                  <UserInterface {user_interface} />
+                  <DefaultValue>{self.defaultValue}</DefaultValue>
+                  <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
+                </Property>'''.splitlines()
             options = '\n        '.join(['<Value DisplayName="{}">{}</Value>'.format(opt['displayName'], opt['value']) for opt in self.enumeration])
             return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
   <UserInterface {user_interface} />
@@ -347,6 +344,8 @@ class ParameterGenerator:
                                           '<!-- [/ParameterGui] -->')
             util.substitute_lines_in_file(self.__generate_platform_support(), dst, '<!-- [PlatformSupport] -->',
                                           '<!-- [/PlatformSupport] -->')
+            util.substitute_lines_in_file(self.__generate_plugin_info(), dst, '<!-- [PluginInfo] -->',
+                                          '<!-- [/PluginInfo] -->')
 
         def _generate_doc():
             for param in self.parameters.values():
@@ -452,4 +451,8 @@ class ParameterGenerator:
         return auto_add_line_end(lines)
 
     def __generate_platform_support(self):
+        logging.warning('Deprecated tag: "PlatformSupport", please migrate to "PluginInfo" instead.')
         return auto_add_line_end(self.pluginInfo.generate_platform_support())
+
+    def __generate_plugin_info(self):
+        return auto_add_line_end(self.pluginInfo.generate_plugin_info())
