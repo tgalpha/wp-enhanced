@@ -10,7 +10,9 @@ __all__ = [
     'path_is_under',
     'load_toml',
     'replace_in_basename',
-    'remove_ansi_color'
+    'remove_ansi_color',
+    'auto_add_line_end',
+    'add_indent',
 ]
 
 
@@ -39,3 +41,14 @@ def replace_in_basename(path: str, old: str, new: str):
 def remove_ansi_color(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     return ansi_escape.sub('', text)
+
+
+def auto_add_line_end(lines: list[str]):
+    for i, line in enumerate(lines):
+        if not line.endswith('\n'):
+            lines[i] += '\n'
+    return lines
+
+
+def add_indent(lines: list[str], indent: int):
+    return [f'{" " * indent}{line}' for line in lines]

@@ -10,7 +10,9 @@ mac_targets = [
     { platform = 'iOS', architectures = ['iOS'] },
 ]
 
-[plugin_info.platform_support]
+[plugin_info]
+MenuPath = 'custom'
+
 [plugin_info.platform_support.Any]
 CanBeInsertOnBusses = true
 CanBeInsertOnAudioObjects = true

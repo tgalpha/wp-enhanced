@@ -29,6 +29,15 @@ class PluginInfo:
             lines.append('</Platform>')
         return lines
 
+    def generate_plugin_info(self) -> list[str]:
+        return [
+            f'<PluginInfo MenuPath="{self.infoDict["MenuPath"]}">' if self.infoDict["MenuPath"] else '<PluginInfo>',
+            '  <PlatformSupport>',
+            *add_indent(self.generate_platform_support(), 4),
+            '  </PlatformSupport>',
+            '</PluginInfo>'
+        ]
+
 
 class PlatformTarget:
     def __init__(self, target_dict: dict):
