@@ -16,6 +16,7 @@ from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
 from wpe.project_config import ProjectConfig, PlatformTarget
 from wpe.test_runner import TestRunner
+from wpe import constants
 
 
 class Worker:
@@ -96,10 +97,15 @@ class Worker:
         logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
 
     def init_wpe(self):
+        def _append_to_gitignore():
+            gitignore = osp.join(self.pathMan.root, '.gitignore')
+            if osp.exists(gitignore):
+                with open(gitignore, 'a') as f:
+                    f.write(constants.extra_gitignore)
         logging.info('Initialize wpe project config')
         self.pathMan = self.pathMan or PathMan()
         HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
-
+        _append_to_gitignore()
         wpe_util.overwrite_copy(
             osp.join(self.pathMan.templatesDir, '.wpe'),
             osp.join(self.pathMan.configDir)
