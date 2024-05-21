@@ -275,35 +275,10 @@ class ParameterGenerator:
                 dep['obj'] = self.parameters[dep['name']]
 
     def _generate(self):
-        def _copy_template(relative):
-            def _need_overwrite(_dst):
-                if self.isForced:
-                    return True
-                if osp.isfile(_dst):
-                    content = util.load_text(_dst)
-                    return '[wp-enhanced template]' not in content
-                return True
-
-            src = osp.join(self.pathMan.templatesDir, relative)
-            dst = replace_in_basename(osp.join(self.pathMan.root, relative), 'ProjectName', self.pathMan.pluginName)
-            if not _need_overwrite(dst):
-                logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
-                return dst
-            if osp.isfile(src):
-                overwrite_copy(src, dst)
-                util.substitute_keywords_in_file(dst,
-                                                 {
-                                                     'name': self.pathMan.pluginName,
-                                                     'display_name': self.pathMan.pluginName,
-                                                     'plugin_id': self.pathMan.pluginId,
-                                                 })
-                return dst
-            else:
-                raise FileNotFoundError(f'File not found: {src}')
 
         def _generate_fx_params_h():
             target = 'SoundEnginePlugin/ProjectNameFXParams.h'
-            dst = _copy_template(target)
+            dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
             util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
             util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
@@ -315,7 +290,7 @@ class ParameterGenerator:
 
         def _generate_fx_params_cpp():
             target = 'SoundEnginePlugin/ProjectNameFXParams.cpp'
-            dst = _copy_template(target)
+            dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
                                           '// [/ParameterInitialization]')
             util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
@@ -325,13 +300,13 @@ class ParameterGenerator:
 
         def _generate_wwise_plugin_h():
             target = 'WwisePlugin/ProjectNamePlugin.h'
-            dst = _copy_template(target)
+            dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
                                           '// [/PropertyNames]')
 
         def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
-            dst = _copy_template(target)
+            dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
                                           '// [/PropertyNames]')
             util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
@@ -339,7 +314,7 @@ class ParameterGenerator:
 
         def _generate_wwise_xml():
             target = 'WwisePlugin/ProjectName.xml'
-            dst = _copy_template(target)
+            dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->',
                                           '<!-- [/ParameterGui] -->')
             util.substitute_lines_in_file(self.__generate_platform_support(), dst, '<!-- [PlatformSupport] -->',
