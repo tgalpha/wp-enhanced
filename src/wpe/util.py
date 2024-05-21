@@ -1,3 +1,4 @@
+import logging
 import re
 import tomllib
 import os.path as osp
@@ -5,15 +6,9 @@ from distutils.dir_util import copy_tree
 from distutils.file_util import copy_file
 from pathlib import Path
 
-__all__ = [
-    'overwrite_copy',
-    'path_is_under',
-    'load_toml',
-    'replace_in_basename',
-    'remove_ansi_color',
-    'auto_add_line_end',
-    'add_indent',
-]
+import kkpyutil as util
+
+from wpe.pathman import PathMan
 
 
 def overwrite_copy(src: str, dst: str):
@@ -52,3 +47,30 @@ def auto_add_line_end(lines: list[str]):
 
 def add_indent(lines: list[str], indent: int):
     return [f'{" " * indent}{line}' for line in lines]
+
+
+def copy_template(relative, pathman: PathMan, is_forced=False):
+    def _need_overwrite(_dst):
+        if is_forced:
+            return True
+        if osp.isfile(_dst):
+            content = util.load_text(_dst)
+            return '[wp-enhanced template]' not in content
+        return True
+
+    src = osp.join(pathman.templatesDir, relative)
+    dst = replace_in_basename(osp.join(pathman.root, relative), 'ProjectName', pathman.pluginName)
+    if not _need_overwrite(dst):
+        logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
+        return dst
+    if osp.isfile(src):
+        overwrite_copy(src, dst)
+        util.substitute_keywords_in_file(dst,
+                                         {
+                                             'name': pathman.pluginName,
+                                             'display_name': pathman.pluginName,
+                                             'plugin_id': pathman.pluginId,
+                                         })
+        return dst
+    else:
+        raise FileNotFoundError(f'File not found: {src}')

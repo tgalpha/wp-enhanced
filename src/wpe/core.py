@@ -42,7 +42,7 @@ class Worker:
             return MacWorker(args)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
-    def _lazy_init_configs(self):
+    def _lazy_load_configs(self):
         self.pathMan = self.pathMan or PathMan()
         self.projConfig = ProjectConfig(self.pathMan)
         self.targetPlatforms = self.projConfig.target_platforms()
@@ -59,7 +59,7 @@ class Worker:
         if self.args.new:
             return self.new()
 
-        self._lazy_init_configs()
+        self._lazy_load_configs()
 
         if self.args.initWpe:
             return self.init_wpe()
@@ -90,9 +90,17 @@ class Worker:
         self.wpWrapper.wp(self.args.wp)
 
     def new(self):
+        def _copy_win32_gui_resource():
+            wpe_util.copy_template('WwisePlugin/ProjectName.rc', self.pathMan)
+            wpe_util.copy_template('WwisePlugin/resource.h', self.pathMan)
+            wpe_util.copy_template('WwisePlugin/Win32/ProjectNamePluginGUI.h', self.pathMan)
+            wpe_util.copy_template('WwisePlugin/Win32/ProjectNamePluginGUI.cpp', self.pathMan)
+
         logging.info('Create new project')
         self.wpWrapper.new()
         self.init_wpe()
+        self._lazy_load_configs()
+        _copy_win32_gui_resource()
         self.premake()
         logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
 
