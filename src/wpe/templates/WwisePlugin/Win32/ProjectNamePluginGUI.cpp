@@ -2,6 +2,11 @@
 
 #include "%(name)sPluginGUI.h"
 
+AK_WWISE_PLUGIN_GUI_WINDOWS_BEGIN_POPULATE_TABLE(PropTable)
+// [PropertyTable]
+// [/PropertyTable]
+AK_WWISE_PLUGIN_GUI_WINDOWS_END_POPULATE_TABLE()
+
 %(name)sPluginGUI::%(name)sPluginGUI()
 {
 }
@@ -9,7 +14,7 @@
 ADD_AUDIOPLUGIN_CLASS_TO_CONTAINER(
     %(name)s,            // Name of the plug-in container for this shared library
     %(name)sPluginGUI,   // Authoring plug-in class to add to the plug-in container
-    %(name)sSource       // Corresponding Sound Engine plug-in class
+    %(name)sFX           // Corresponding Sound Engine plug-in class
 );
 
 // [wp-enhanced] Uncomment the following lines if you want to use a custom GUI
@@ -24,7 +29,7 @@ ADD_AUDIOPLUGIN_CLASS_TO_CONTAINER(
 //     AKASSERT( in_eDialog == AK::Wwise::Plugin::SettingsDialog );
 //  
 //     out_uiDialogID = IDD_DIALOG1;
-//     out_pTable = nullptr;
+//     out_pTable = PropTable;
 //  
 //     return true;
 // }

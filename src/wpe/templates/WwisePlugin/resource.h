@@ -3,6 +3,9 @@
 // Used by %(name)s.rc
 //
 #define IDD_DIALOG1                     101
+// [IDC]
+#define IDC_Property 1001
+// [/IDC]
 
 // Next default values for new objects
 // 

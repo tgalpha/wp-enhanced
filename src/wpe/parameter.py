@@ -237,11 +237,31 @@ class Parameter:
 Range: {self.minValue} - {self.maxValue} <br/>'''
             util.save_text(output_path, doc_str)
 
+    def generate_win32_controls(self) -> list[str]:
+        row_height = 18
+        vertical_pos = row_height * self.id + 6
+        title = f'LTEXT "{self.displayName}",IDC_STATIC,0,{vertical_pos + 2},48,10'
+        control_pos = f'48,{vertical_pos},64,12'
+        if self.type_ == 'bool':
+            control = f'CONTROL "{self.propertyName}",IDC_{self.propertyName},"Button",BS_AUTOCHECKBOX | WS_TABSTOP,' + control_pos
+        elif self.type_ == 'int':
+            if self.enumeration:
+                options = ', '.join([f'{opt["value"]}:{opt["displayName"]}' for opt in self.enumeration])
+                control = f'LTEXT "Class=Combo;Prop={self.propertyName};Options={options}",IDC_{self.propertyName},' + control_pos
+            else:
+                control = f'LTEXT "Class=Spinner;Prop={self.propertyName};Min={self.minValue};Max={self.maxValue}",IDC_{self.propertyName},' + control_pos
+        elif self.type_ == 'float':
+            control = f'LTEXT "Class=SuperRange;Prop={self.propertyName}",IDC_{self.propertyName},' + control_pos
+        else:
+            raise ValueError(f'Unknown type: {self.type_}')
+        return [title, control]
+
 
 class ParameterGenerator:
-    def __init__(self, path_man, is_forced=False):
+    def __init__(self, path_man, is_forced=False, generate_gui_resource=False):
         self.pathMan = path_man
         self.isForced = is_forced
+        self.generateGuiResource = generate_gui_resource
         self.innerTypes: dict[str, InnerType] = {}
         self.parameters: dict[str, Parameter] = {}
         self.pluginInfo: Optional[PluginInfo] = None
@@ -275,7 +295,6 @@ class ParameterGenerator:
                 dep['obj'] = self.parameters[dep['name']]
 
     def _generate(self):
-
         def _generate_fx_params_h():
             target = 'SoundEnginePlugin/ProjectNameFXParams.h'
             dst = copy_template(target, self.pathMan, self.isForced)
@@ -326,12 +345,25 @@ class ParameterGenerator:
             for param in self.parameters.values():
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
+        def _generate_win32_gui_resource():
+            target = 'WwisePlugin/ProjectName.rc'
+            dst = copy_template(target, self.pathMan, self.isForced)
+            util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
+            target = 'WwisePlugin/resource.h'
+            dst = copy_template(target, self.pathMan, self.isForced)
+            util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
+            target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
+            dst = copy_template(target, self.pathMan, self.isForced)
+            util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
+
         _generate_fx_params_h()
         _generate_fx_params_cpp()
         _generate_wwise_plugin_h()
         _generate_wwise_plugin_cpp()
         _generate_wwise_xml()
         _generate_doc()
+        if self.generateGuiResource:
+            _generate_win32_gui_resource()
 
     def __generate_ids(self):
         lines = []
@@ -431,3 +463,23 @@ class ParameterGenerator:
 
     def __generate_plugin_info(self):
         return auto_add_line_end(self.pluginInfo.generate_plugin_info())
+
+    def __generate_win32_controls(self):
+        lines = []
+        for param in self.parameters.values():
+            lines.extend(param.generate_win32_controls())
+        return auto_add_line_end(lines)
+
+    def __generate_win32_idc(self):
+        lines = []
+        for i, param in enumerate(self.parameters.values()):
+            lines.append(f'#define IDC_{param.propertyName} {i + 1001}')
+        return auto_add_line_end(lines)
+
+    def __generate_win32_property_table(self):
+        lines = []
+        for param in self.parameters.values():
+            if param.type_ != 'bool':
+                continue
+            lines.append(f'    AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})')
+        return auto_add_line_end(lines)

@@ -162,6 +162,15 @@ Hooks should:
     For -gp, it will overwrite existing source files.
     For -b, it will terminate Wwise process and copy plugin files, then reopen Wwise.'''
     )
+    parser.add_argument(
+        '-g',
+        '--gui',
+        action='store_true',
+        dest='gui',
+        required=False,
+        default=False,
+        help='Effective when -gp is specified. Generate GUI resources.'
+    )
 
     parsed_args = parser.parse_args()
     worker = Worker.create_platform(parsed_args)
