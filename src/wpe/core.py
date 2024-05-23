@@ -132,7 +132,9 @@ class Worker:
             util.remove_tree(self.pathMan.docsDir)
             util.remove_tree(self.pathMan.htmlDocsDir)
         clear_existing_doc()
-        parameter_manager = ParameterGenerator(self.pathMan, is_forced=self.args.force)
+        parameter_manager = ParameterGenerator(self.pathMan,
+                                               is_forced=self.args.force,
+                                               generate_gui_resource=self.args.gui)
         parameter_manager.main()
         self.wpWrapper.build('Documentation')
 

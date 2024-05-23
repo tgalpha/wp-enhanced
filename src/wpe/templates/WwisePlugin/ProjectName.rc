@@ -56,6 +56,9 @@ STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN | WS_SY
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
+// [Controls]
+LTEXT           "Class=SuperRange;Prop=Property",IDC_Property,48,18,60,12
+// [/Controls]
 END
 
 
