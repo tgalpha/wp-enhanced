@@ -1,12 +1,9 @@
 import copy
-import logging
-import os.path as osp
 from typing import Any, Optional
 from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 
-import kkpyutil as util
 
 # project
 from wpe.util import *
@@ -15,20 +12,25 @@ from wpe.project_config import ProjectConfig, PluginInfo
 _type_prefix_map = {
     'float': 'f',
     'int': 'i',
+    'uint': 'u',
     'bool': 'b',
 }
 
 _wwise_type_name_map = {
     'float': 'AkReal32',
     'int': 'AkInt32',
+    'uint': 'AkUInt32',
     'bool': 'bool',
 }
 
 _xml_type_name_map = {
     'float': 'Real32',
     'int': 'int32',
+    'uint': 'Uint32',
     'bool': 'bool',
 }
+
+_supported_rtpc_types = {'Additive', 'Multiplicative', 'Exclusive', 'Boolean'}
 
 
 @dataclass
@@ -65,10 +67,11 @@ class InnerType:
 class Parameter:
     name: str
     type_: str
-    rtpc: bool
+    rtpc_type: str
     defaultValue: Any
     minValue: Any
     maxValue: Any
+    data_meaning: str = ''
     description: list[dict] = field(default_factory=list)
     dependencies: list[dict] = field(default_factory=list)
     displayName: str = ''
@@ -78,6 +81,13 @@ class Parameter:
     parent: Optional[InnerType] = None
     basename: str = ''
     suffix: str = ''
+
+    def __post_init__(self):
+        if self.type_ not in _wwise_type_name_map:
+            raise ValueError(f'Unsupported type: {self.type_} in parameter "{self.name}". Expected one of {_wwise_type_name_map.keys()}.')
+
+        if self.rtpc_type and self.rtpc_type not in _supported_rtpc_types:
+            raise ValueError(f'Unsupported rtpc type: {self.rtpc_type} in parameter "{self.name}". Expected one of {_supported_rtpc_types}.')
 
     def generate_names(self):
         if self.type_ == 'bool':
@@ -89,7 +99,7 @@ class Parameter:
         self.paramIDName = f'PARAM_{self.name.upper()}_ID'
         self.typeName = _wwise_type_name_map[self.type_]
         self.xmlTypeName = _xml_type_name_map[self.type_]
-        self.struct = 'InnerType' if self.parent else ('RTPC' if self.rtpc else 'NonRTPC')
+        self.struct = 'InnerType' if self.parent else ('RTPC' if self.rtpc_type else 'NonRTPC')
         self.displayName = self.displayName or util.convert_compound_cases(self.name, style='title')
         self.nameSpace = f'{self.struct}.{self.parent.name}{self.suffix}' if self.parent else self.struct
 
@@ -101,10 +111,11 @@ class Parameter:
         return Parameter(
             name=name,
             type_=dict_define['type'],
-            rtpc=dict_define['rtpc'],
+            rtpc_type=dict_define.get('rtpc_type', 'Exclusive' if dict_define.get('rtpc') else ''),
             defaultValue=dict_define['default_value'],
             minValue=dict_define.get('min_value', None),
             maxValue=dict_define.get('max_value', None),
+            data_meaning=dict_define.get('data_meaning', ''),
             description=dict_define.get('description', []),
             dependencies=copy.deepcopy(dict_define.get('dependencies', [])),
             displayName=dict_define.get('display_name', ''),
@@ -127,7 +138,7 @@ class Parameter:
         return f'{self.nameSpace}.{self.cppVariableName} = READBANKDATA({self.typeName}, pParamsBlock, in_ulBlockSize);'
 
     def generate_set_parameter(self) -> str:
-        need_reinterpret = self.typeName != 'AkReal32' and self.rtpc
+        need_reinterpret = self.typeName != 'AkReal32' and bool(self.rtpc_type)
         interpret_pointer = f'static_cast<{self.typeName}>(*(AkReal32*)in_pValue)' if need_reinterpret else f'*(({self.typeName}*)in_pValue)'
         return f'''    case {self.paramIDName}:
         {self.nameSpace}.{self.cppVariableName} = {interpret_pointer};
@@ -170,10 +181,11 @@ class Parameter:
                     max_value.text = str(dep['max'])
             ET.indent(dependencies_element)
             return '\n' + ET.tostring(dependencies_element).decode(util.TXT_CODEC)
-        support_rtpc_type = 'SupportRTPCType="Additive"' if self.rtpc else ''
+        support_rtpc_type = f'SupportRTPCType="{self.rtpc_type}"' if self.rtpc_type else ''
+        data_meaning = f'DataMeaning="{self.data_meaning}"' if self.data_meaning else ''
 
         def _generate_bool_gui_lines():
-            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>{_generate_dependencies()}
 </Property>'''.splitlines()
@@ -181,13 +193,13 @@ class Parameter:
         def _generate_int_gui_lines():
             user_interface = self.userInterface
             if not self.enumeration:
-                return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+                return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
                   <UserInterface {user_interface} />
                   <DefaultValue>{self.defaultValue}</DefaultValue>
                   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
                 </Property>'''.splitlines()
             options = '\n        '.join(['<Value DisplayName="{}">{}</Value>'.format(opt['displayName'], opt['value']) for opt in self.enumeration])
-            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
   <UserInterface {user_interface} />
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
@@ -202,7 +214,7 @@ class Parameter:
 
         def _generate_float_gui_lines():
             user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}"'
-            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} DisplayName="{self.displayName}">
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
   <UserInterface {user_interface} />
   <DefaultValue>{self.defaultValue}</DefaultValue>
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
@@ -219,7 +231,7 @@ class Parameter:
         if self.type_ == 'bool':
             return _generate_bool_gui_lines()
 
-        if self.type_ == 'int':
+        if self.type_ == 'int' or self.type_ == 'uint':
             return _generate_int_gui_lines()
 
         if self.type_ == 'float':

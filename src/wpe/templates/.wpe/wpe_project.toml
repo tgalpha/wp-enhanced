@@ -21,14 +21,14 @@ CanBeRendered = true
 
 [parameters.defines.bool_param_as_checkbox]
 type = 'bool'
-rtpc = false
 default_value = true
 
 
 [parameters.defines.int_param_as_combo_box] # snake_case_name
 # int/float/bool are supported
 type = 'int'
-rtpc = true
+# Additive/Multiplicative/Exclusive/Boolean are supported
+rtpc_type = 'Exclusive'
 default_value = 0
 
 # Fields below are optional
@@ -52,7 +52,9 @@ dependencies = [
 
 [parameters.defines.float_param_as_slider]
 type = 'float'
-rtpc = true
+rtpc_type = 'Exclusive'
+# Optional, Refer to `DataMeaning` section in: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
+data_meaning = 'Decibels'
 default_value = 0
 min_value = -96
 max_value = 24
