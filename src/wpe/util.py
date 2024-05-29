@@ -1,5 +1,8 @@
 import logging
+import os
 import re
+import shutil
+import subprocess
 import tomllib
 import os.path as osp
 from distutils.dir_util import copy_tree
@@ -29,8 +32,43 @@ def load_toml(path):
     return toml_content
 
 
-def replace_in_basename(path: str, old: str, new: str):
-    return osp.join(osp.dirname(path), osp.basename(path).replace(old, new))
+def git_mv(src, dst):
+    try:
+        util.run_cmd(['git', 'mv', src, dst])
+    except subprocess.CalledProcessError:
+        # git ignored files will raise error, fallback to os.rename
+        os.rename(src, dst)
+    except Exception as e:
+        logging.error(f'Error moving {src} to {dst} with `git mv`: {e}')
+        raise e
+
+
+def replace_in_basename(path: str, old: str, new: str, count=0):
+    return osp.join(osp.dirname(path), osp.basename(path).replace(old, new, count))
+
+
+def remove_path(path, ignore_errors=True):
+    if osp.isfile(path):
+        os.remove(path)
+    if osp.isdir(path):
+        shutil.rmtree(path, ignore_errors=ignore_errors)
+
+
+def replace_content_in_file(file_path, org, dst):
+    content = util.load_text(file_path)
+    util.save_text(file_path, content.replace(org, dst))
+
+
+def path_is_under_git_repo(path: str) -> bool:
+    git_exe = shutil.which('git')
+    if not git_exe:
+        return False
+    try:
+        res = util.run_cmd([git_exe, '-C', path, 'rev-parse', '--is-inside-work-tree'])
+        return res.stdout.decode().strip() == 'true'
+    except Exception as e:
+        logging.error(f'Error checking git repo: {e}')
+        return False
 
 
 def remove_ansi_color(text):

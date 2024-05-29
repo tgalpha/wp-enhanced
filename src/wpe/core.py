@@ -16,6 +16,7 @@ from wpe.parameter import ParameterGenerator
 from wpe.hook_processor import HookProcessor
 from wpe.project_config import ProjectConfig, PlatformTarget
 from wpe.test_runner import TestRunner
+from wpe.renamer import Renamer
 from wpe import constants
 
 
@@ -84,6 +85,9 @@ class Worker:
 
         if self.args.bump:
             self.bump()
+
+        if self.args.rename:
+            self.rename()
 
     def wp(self):
         logging.info('Run wp.py')
@@ -199,6 +203,16 @@ class Worker:
         logging.info('Bump wpe project version')
         self.projConfig.bump()
         logging.info(f'Version bumped to {self.projConfig.version()}')
+
+    @HookProcessor().register('rename')
+    def rename(self):
+        logging.info(f'Rename plugin from {self.pathMan.pluginName} to {self.args.rename}.')
+        res = input('Commit your changes before renaming is recommended. Continue? [y/n]') == 'y'
+        if not res:
+            return
+        Renamer(self.args.rename, self.pathMan, self.projConfig).main()
+        self.premake()
+        logging.info('Rename completed, check your changes with git status.')
 
     def _build(self):
         logging.info('Build plugin')
