@@ -111,6 +111,16 @@ def main():
         help='Bump wpe project version.'
     )
 
+    command_group.add_argument(
+        '--rename',
+        action='store',
+        type=str,
+        dest='rename',
+        default='',
+        required=False,
+        help='Rename plugin.'
+    )
+
     parser.add_argument(
         '-H',
         '--with-hooks',
