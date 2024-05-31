@@ -43,7 +43,7 @@ def git_mv(src, dst):
         raise e
 
 
-def replace_in_basename(path: str, old: str, new: str, count=0):
+def replace_in_basename(path: str, old: str, new: str, count=-1):
     return osp.join(osp.dirname(path), osp.basename(path).replace(old, new, count))
 
 
