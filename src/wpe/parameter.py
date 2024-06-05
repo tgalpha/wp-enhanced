@@ -358,12 +358,13 @@ class ParameterGenerator:
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
         def _generate_win32_gui_resource():
-            target = 'WwisePlugin/ProjectName.rc'
-            dst = copy_template(target, self.pathMan, self.isForced)
-            util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
-            target = 'WwisePlugin/resource.h'
-            dst = copy_template(target, self.pathMan, self.isForced)
-            util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
+            if self.generateGuiResource:
+                target = 'WwisePlugin/ProjectName.rc'
+                dst = copy_template(target, self.pathMan, self.isForced)
+                util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
+                target = 'WwisePlugin/resource.h'
+                dst = copy_template(target, self.pathMan, self.isForced)
+                util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
             dst = copy_template(target, self.pathMan, self.isForced)
             util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
@@ -374,8 +375,7 @@ class ParameterGenerator:
         _generate_wwise_plugin_cpp()
         _generate_wwise_xml()
         _generate_doc()
-        if self.generateGuiResource:
-            _generate_win32_gui_resource()
+        _generate_win32_gui_resource()
 
     def __generate_ids(self):
         lines = []
@@ -493,5 +493,5 @@ class ParameterGenerator:
         for param in self.parameters.values():
             if param.type_ != 'bool':
                 continue
-            lines.append(f'    AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})')
+            lines.append(f'AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})')
         return auto_add_line_end(lines)
