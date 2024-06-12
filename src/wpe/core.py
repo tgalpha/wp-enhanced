@@ -185,6 +185,7 @@ class Worker:
         _zip_bundle(output_dir)
         logging.info(f'Saved to {output_dir}')
 
+    @HookProcessor().register('full_pack')
     def full_pack(self):
         HookProcessor().process_pre_hook('build')
         for plt in self.targetPlatforms:

@@ -38,7 +38,7 @@ New plugin project will be created with default parameters: [wpe_project.toml](s
 ## Hooks
 All hooks should be placed in `$PROJECT_ROOT/.wpe/hooks` folder. 
 
-`pre`/`post`_`premake`/`generate_parameters`/`build`/`pack` are supported.
+`pre`/`post`_`premake`/`generate_parameters`/`build`/`pack`/`full_pack` are supported.
 
 A default `post_build.py` is created when creating new project, which will copy debug authoring plugin to Release folder for loading in Wwise Authoring.
 
