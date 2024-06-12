@@ -37,10 +37,11 @@ class Worker:
     @staticmethod
     def create_platform(args):
         system = platform.system()
+        pathman = PathMan(args.root) if args.root else None
         if system == 'Windows':
-            return WindowsWorker(args)
+            return WindowsWorker(args, pathman)
         if system == 'Darwin':
-            return MacWorker(args)
+            return MacWorker(args, pathman)
         raise NotImplementedError(f'Not implemented for this platform: {system}')
 
     def _lazy_load_configs(self):
@@ -236,8 +237,8 @@ class Worker:
 
 
 class WindowsWorker(Worker):
-    def __init__(self, args):
-        super().__init__(args)
+    def __init__(self, args, path_man=None):
+        super().__init__(args, path_man)
         self.wwiseProcName = 'Wwise.exe'
 
     def _reopen_wwise(self):
@@ -247,8 +248,8 @@ class WindowsWorker(Worker):
 
 
 class MacWorker(Worker):
-    def __init__(self, args):
-        super().__init__(args)
+    def __init__(self, args, path_man=None):
+        super().__init__(args, path_man)
         self.wwiseProcName = 'wine64-preloader'
 
     def _reopen_wwise(self):

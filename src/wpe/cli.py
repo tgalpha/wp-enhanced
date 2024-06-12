@@ -181,6 +181,16 @@ Hooks should:
         default=False,
         help='Effective when -gp is specified. Generate GUI resources.'
     )
+    parser.add_argument(
+        '-r',
+        '--root',
+        type=str,
+        action='store',
+        dest='root',
+        required=False,
+        default='',
+        help='Project root path. Default value is current working directory.'
+    )
 
     parsed_args = parser.parse_args()
     worker = Worker.create_platform(parsed_args)
