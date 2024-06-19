@@ -22,6 +22,10 @@ import sys
 import os.path as osp
 from common.constant import PLUGIN_NAME, PREMAKE, PROJECT_ROOT, WWISE_ROOT
 from common.platform import *
+# [wp-enhanced patch] import platform patch
+from wpe.wp_patch.common.platform import android
+from wpe.wp_patch.common.platform import ps5
+# [/wp-enhanced patch]
 from common.registry import platform_registry, get_supported_platforms, is_authoring_target
 
 SUPPORTED_PLATFORMS = get_supported_platforms("premake")

@@ -21,8 +21,9 @@ import sys
 import re
 from common.constant import PLUGIN_NAME, PROJECT_ROOT
 from common.platform import *
-# [wp-enhanced patch] import android platform patch
+# [wp-enhanced patch] import platform patch
 from wpe.wp_patch.common.platform import android
+from wpe.wp_patch.common.platform import ps5
 # [/wp-enhanced patch]
 from common.registry import platform_registry, get_supported_platforms
 from common.util import exit_with_error
