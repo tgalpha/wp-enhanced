@@ -41,6 +41,7 @@ class Renamer:
             f'SoundEnginePlugin/{self.oldName}FX*',
             f'WwisePlugin/{self.oldName}*',
             f'WwisePlugin/Win32/{self.oldName}*',
+            f'WwisePlugin/resource.h',
             'additional_artifacts.json',
             'bundle_template.json',
             f'{self.oldName}Config.h',

@@ -121,6 +121,16 @@ def main():
         help='Rename plugin.'
     )
 
+    command_group.add_argument(
+        '-ar',
+        '--add-jetbrains-run-config',
+        action='store_true',
+        dest='addJetBrainsRunConfig',
+        default=False,
+        required=False,
+        help='Add JetBrains run configuration for debugging with Wwise Authoring.'
+    )
+
     parser.add_argument(
         '-H',
         '--with-hooks',

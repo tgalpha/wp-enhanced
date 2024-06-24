@@ -17,6 +17,7 @@ from wpe.hook_processor import HookProcessor
 from wpe.project_config import ProjectConfig, PlatformTarget
 from wpe.test_runner import TestRunner
 from wpe.renamer import Renamer
+from wpe.jb_run_manager import JbRunManager
 from wpe import constants
 
 
@@ -89,6 +90,9 @@ class Worker:
 
         if self.args.rename:
             self.rename()
+
+        if self.args.addJetBrainsRunConfig:
+            self.add_jetbrains_run_config()
 
     def wp(self):
         logging.info('Run wp.py')
@@ -215,6 +219,9 @@ class Worker:
         Renamer(self.args.rename, self.pathMan, self.projConfig).main()
         self.premake()
         logging.info('Rename completed, check your changes with git status.')
+
+    def add_jetbrains_run_config(self):
+        JbRunManager(self.pathMan).lazy_add_run_config()
 
     def _build(self):
         logging.info('Build plugin')
