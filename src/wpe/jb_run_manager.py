@@ -21,7 +21,7 @@ class JbRunManager:
             print('Workspace xml not found. Run config was not added. Please open Authoring solution with JetBrains IDE first.')
 
     def _find_workspace_xml(self) -> bool:
-        expected = osp.join(self.pathMan.root, '.idea', '.idea.AudioObject3DMixer_Authoring_*', '.idea', 'workspace.xml')
+        expected = osp.join(self.pathMan.root, '.idea', f'.idea.{self.pathMan.pluginName}_Authoring_*', '.idea', 'workspace.xml')
         self.workspaceXmlPaths = glob.glob(expected)
         return bool(self.workspaceXmlPaths)
 
@@ -35,6 +35,7 @@ class JbRunManager:
     def _add_run_config(self):
         for workspaceXmlPath in self.workspaceXmlPaths:
             self._lazy_add_run_config_to_workspace_xml(workspaceXmlPath)
+            print(f'Run configuration added to {workspaceXmlPath}')
 
     def _lazy_add_run_config_to_workspace_xml(self, workspace):
         """
