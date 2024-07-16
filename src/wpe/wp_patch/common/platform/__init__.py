@@ -13,14 +13,35 @@ written agreement between you and Audiokinetic Inc.
 """
 
 import os
+import os.path as osp
+
+import packaging.version as pkg_ver
+
+from wpe.wp_wrapper import WpWrapper
+
+
+def basename_without_extension(path):
+    return osp.splitext(osp.basename(path))[0]
 
 
 def installed_in_sdk(module_name):
-    return os.path.isfile(os.path.join(os.getenv('WWISEROOT'), 'Scripts/Build/Plugins/common/platform', f'{module_name}.py'))
+    return osp.isfile(osp.join(os.getenv('WWISEROOT'), 'Scripts/Build/Plugins/common/platform', f'{module_name}.py'))
+
+
+def should_import(filename):
+    module_name = basename_without_extension(filename)
+
+    if module_name == 'ps5':
+        wp_wrapper = WpWrapper()
+        wwise_version = pkg_ver.parse(wp_wrapper.wwiseVersion)
+        # Wwise from 2021.1.12 and up supports multiple Prospero SDK versions
+        if wwise_version >= pkg_ver.parse('2021.1.12'):
+            return False
+    return installed_in_sdk(module_name) and filename.endswith(".py") and filename != osp.basename(__file__)
 
 
 __all__ = [
-    module_name
-    for f in os.listdir(os.path.dirname(__file__))
-    if installed_in_sdk(module_name := os.path.basename(f)[:-3]) and f.endswith(".py") and f != os.path.basename(__file__)
+    basename_without_extension(f)
+    for f in os.listdir(osp.dirname(__file__))
+    if should_import(f)
 ]

@@ -32,6 +32,7 @@ def inject_wwise_sdk_for_android(func):
     return wrapper
 
 
+@util.SingletonDecorator
 class WpWrapper:
     def __init__(self):
         self.wwiseRoot: str = os.getenv('WWISEROOT')
