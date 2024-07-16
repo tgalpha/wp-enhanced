@@ -63,7 +63,7 @@ local currentPlatform = string.lower(os.target() .. '_' .. _ACTION)
 
 local ActionToFolderName = function(action)
 	local result
-	if action == "vs2015" or action == "vs2017" or action == "vs2019" then
+	if action == "vs2015" or action == "vs2017" or action == "vs2019" or action == "vs2022" then
 		result = "x64"
 	elseif action == "gmake" then
 		result = currentPlatform
