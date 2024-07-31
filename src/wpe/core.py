@@ -18,6 +18,7 @@ from wpe.project_config import ProjectConfig, PlatformTarget
 from wpe.test_runner import TestRunner
 from wpe.renamer import Renamer
 from wpe.jb_run_manager import JbRunManager
+from wpe.deployment import Deployment
 from wpe import constants
 
 
@@ -93,6 +94,12 @@ class Worker:
 
         if self.args.addJetBrainsRunConfig:
             self.add_jetbrains_run_config()
+
+        if self.args.subcommand == 'deploy':
+            self.deploy()
+
+        if self.args.subcommand == 'clean':
+            self.clean()
 
     def wp(self):
         logging.info('Run wp.py')
@@ -224,6 +231,14 @@ class Worker:
 
     def add_jetbrains_run_config(self):
         JbRunManager(self.pathMan).lazy_add_run_config()
+
+    @HookProcessor().register('deploy')
+    def deploy(self):
+        Deployment.create(self.args).deploy()
+
+    @HookProcessor().register('clean')
+    def clean(self):
+        Deployment.create(self.args).clean()
 
     def _build(self):
         logging.info('Build plugin')

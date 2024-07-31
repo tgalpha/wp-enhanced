@@ -3,13 +3,70 @@ import argparse
 from wpe.core import Worker
 
 
+def add_deploy_parser(subparsers):
+    subparser = subparsers.add_parser(
+        'deploy',
+        add_help=True,
+        description='Deploy plugin to game project.'
+    )
+    subparser.add_argument(
+        '-a',
+        '--archive',
+        type=str,
+        dest='archive',
+        required=False,
+        default='',
+        help='Plugin installer archive path. leave empty to use recent pack.'
+    )
+    subparser.add_argument(
+        '-d',
+        '--dest-project',
+        type=str,
+        dest='destProject',
+        required=True,
+        default='',
+        help='Destination project root path.'
+    )
+
+
+def add_clean_parser(subparsers):
+    subparser = subparsers.add_parser(
+        'clean',
+        add_help=True,
+        description='Clean deployed plugin in game project.'
+    )
+    subparser.add_argument(
+        '-n',
+        '--name',
+        type=str,
+        dest='name',
+        required=False,
+        default='',
+        help='Plugin name to clean. leave empty to use current plugin project name.'
+    )
+    subparser.add_argument(
+        '-d',
+        '--dest-project',
+        type=str,
+        dest='destProject',
+        required=True,
+        default='',
+        help='Destination project root path.'
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
-        prog='Plugin dev ci build tool',
+        prog='wpe',
         add_help=True,
         epilog='Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.',
         formatter_class=argparse.RawTextHelpFormatter
     )
+
+    # TODO: Refactor other commands to subparsers
+    subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
+    add_deploy_parser(subparsers)
+    add_clean_parser(subparsers)
 
     command_group = parser.add_mutually_exclusive_group()
     command_group.add_argument(
