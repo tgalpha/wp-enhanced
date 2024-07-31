@@ -40,13 +40,10 @@ def find_artifacts(args):
     artifacts_found_in_project = []
 
     platform_info = platform_registry.get(args.platform)
-    # [wp-enhanced] exclude pdb
-    for artifact_glob in (pattern for pattern in platform_info.package.artifacts if not pattern.endswith(".pdb")):
+    for artifact_glob in platform_info.package.artifacts:
         for artifact in glob(os.path.join(WWISE_ROOT, artifact_glob.format(plugin_name=PLUGIN_NAME))):
-            sections = set(artifact.split(os.path.sep))
             artifacts_found.append(artifact)
             print("Found {}".format(artifact))
-    # [/wp-enhanced]
 
     # validate additional artifacts
     for artifact_glob in args.additional_artifacts:

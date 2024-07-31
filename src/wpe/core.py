@@ -201,6 +201,8 @@ class Worker:
                 continue
             args[2] = 'Profile'
             self.wpWrapper.build(*args)
+            args[2] = 'Debug'
+            self.wpWrapper.build(*args)
         HookProcessor().process_post_hook('build')
         self.pack()
 
