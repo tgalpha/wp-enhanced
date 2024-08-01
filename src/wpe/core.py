@@ -52,7 +52,7 @@ class Worker:
         self.targetPlatforms = self.projConfig.target_platforms()
         if self.args.platforms:
             self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform in self.args.platforms]
-        HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
+        HookProcessor().init(self.pathMan, self.args)
 
     def main(self):
         self.wpWrapper.validate_env()
@@ -128,7 +128,7 @@ class Worker:
                     f.write(constants.extra_gitignore)
         logging.info('Initialize wpe project config')
         self.pathMan = self.pathMan or PathMan()
-        HookProcessor().init(self.pathMan, self.args.configuration, self.args.withHooks)
+        HookProcessor().init(self.pathMan, self.args)
         _append_to_gitignore()
         wpe_util.overwrite_copy(
             osp.join(self.pathMan.templatesDir, '.wpe'),

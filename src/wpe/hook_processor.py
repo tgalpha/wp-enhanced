@@ -10,13 +10,15 @@ from wpe.pathman import PathMan
 class HookProcessor:
     def __init__(self):
         self.pathMan = None
+        self.args = None
         self.buildConfig = None
         self.targetHooks = None
 
-    def init(self, path_man: PathMan, build_config: str, target_hooks: list[str]):
+    def init(self, path_man: PathMan, args):
         self.pathMan = path_man
-        self.buildConfig = build_config
-        self.targetHooks = target_hooks
+        self.args = args
+        self.buildConfig = args.configuration
+        self.targetHooks = args.withHooks
 
     def register(self, command):
         """
@@ -51,4 +53,5 @@ class HookProcessor:
         hook_module.main(proj_root=self.pathMan.root,
                          build_config=self.buildConfig,
                          plugin_name=self.pathMan.pluginName,
+                         **self.args.__dict__
                          )
