@@ -198,7 +198,9 @@ class Worker:
 
     @HookProcessor().register('full_pack')
     def full_pack(self):
-        HookProcessor().process_pre_hook('build')
+        hook_processor = HookProcessor()
+        hook_processor.buildConfig = 'Release'
+        hook_processor.process_pre_hook('build')
         for plt in self.targetPlatforms:
             args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
             if plt.need_toolset():
@@ -210,7 +212,7 @@ class Worker:
             self.wpWrapper.build(*args)
             args[2] = 'Debug'
             self.wpWrapper.build(*args)
-        HookProcessor().process_post_hook('build')
+        hook_processor.process_post_hook('build')
         self.pack()
 
     @HookProcessor().register('bump')
