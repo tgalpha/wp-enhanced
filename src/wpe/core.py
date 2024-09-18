@@ -20,6 +20,7 @@ from wpe.renamer import Renamer
 from wpe.jb_run_manager import JbRunManager
 from wpe.deployment import Deployment
 from wpe import constants
+from wpe.build_agent import BuildAgent
 
 
 class Worker:
@@ -56,6 +57,9 @@ class Worker:
 
     def main(self):
         self.wpWrapper.validate_env()
+
+        if self.args.subcommand == 'build-agent':
+            return self.start_build_agent()
 
         if self.args.wp:
             return self.wp()
@@ -241,6 +245,10 @@ class Worker:
     @HookProcessor().register('clean')
     def clean(self):
         Deployment.create(self.args).clean()
+
+    def start_build_agent(self):
+        build_agent = BuildAgent()
+        build_agent.start(self.args.port)
 
     def _build(self):
         logging.info('Build plugin')

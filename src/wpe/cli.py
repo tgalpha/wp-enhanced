@@ -55,6 +55,23 @@ def add_clean_parser(subparsers):
     )
 
 
+def add_build_agent_parser(subparsers):
+    subparser = subparsers.add_parser(
+        'build-agent',
+        add_help=True,
+        description='Start a build agent on current machine. Run build command through ssh to build for iOS will fail with permission issue. So we need to start a build agent process on target machine to handle build command.'
+    )
+    subparser.add_argument(
+        '-p',
+        '--port',
+        type=int,
+        dest='port',
+        required=False,
+        default=5000,
+        help='Port to run the build agent on.'
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog='wpe',
@@ -67,6 +84,7 @@ def main():
     subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
     add_deploy_parser(subparsers)
     add_clean_parser(subparsers)
+    add_build_agent_parser(subparsers)
 
     command_group = parser.add_mutually_exclusive_group()
     command_group.add_argument(
