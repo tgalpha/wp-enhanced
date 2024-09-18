@@ -17,8 +17,8 @@ def rpc_call(method: str, args: dict):
                              json=args)
     response_json = response.json()
     if response.status_code != 200 or response_json['retcode'] != 0:
-        raise RuntimeError(pformat(response_json))
-    logging.info(pformat(response_json))
+        raise RuntimeError(pformat(response_json, width=160, sort_dicts=False))
+    logging.info(pformat(response_json, width=160, sort_dicts=False))
     return response
 
 
@@ -80,3 +80,9 @@ def main(**kwargs):
     check_worktree_clean()
     build_ios_plugin(kwargs['plugin_name'])
     copy_binaries_from_build_machine(kwargs['plugin_name'])
+
+
+if __name__ == '__main__':
+    _proj_root = osp.abspath(f'{__file__}/../../..')
+    _plugin_name = osp.basename(_proj_root)
+    main(proj_root=_proj_root, plugin_name=_plugin_name)
