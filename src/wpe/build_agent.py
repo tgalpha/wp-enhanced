@@ -41,6 +41,7 @@ class BuildAgent:
 
     def start(self, port: int):
         self._app.add_url_rule('/git_sync', 'git_sync', self.git_sync, methods=['POST'])
+        self._app.add_url_rule('/premake', 'premake', self.premake, methods=['POST'])
         self._app.add_url_rule('/build', 'build', self.build, methods=['POST'])
         self._app.run(host='0.0.0.0', port=port)
 

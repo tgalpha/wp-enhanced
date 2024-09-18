@@ -15,10 +15,8 @@ def rpc_call(method: str, args: dict):
     logging.info(f'RPC call: {method} with args: {args}')
     response = requests.post(f'http://{_build_agent_host}:5000/{method}',
                              json=args)
-    if response.status_code != 200:
-        raise RuntimeError(f'Error: {response.status_code}, {response.text}')
     response_json = response.json()
-    if response_json['retcode'] != 0:
+    if response.status_code != 200 or response_json['retcode'] != 0:
         raise RuntimeError(pformat(response_json))
     logging.info(pformat(response_json))
     return response
