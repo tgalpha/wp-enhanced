@@ -1,7 +1,6 @@
 import subprocess
 import logging
 
-import kkpyutil as util
 from flask import Flask, request, jsonify
 
 
@@ -21,8 +20,8 @@ class _CommandResult:
     def parse_completed_process(self, completed_process: subprocess.CompletedProcess):
         self.succeeded = completed_process.returncode == 0
         self.command = completed_process.args
-        self.stdout = util.safe_decode_bytes(completed_process.stdout).strip()
-        self.stderr = util.safe_decode_bytes(completed_process.stderr).strip()
+        self.stdout = completed_process.stdout.strip()
+        self.stderr = completed_process.stderr.strip()
 
     def __str__(self):
         return f'''succeeded: {self.succeeded}
