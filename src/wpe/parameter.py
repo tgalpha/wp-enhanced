@@ -277,6 +277,7 @@ class ParameterGenerator:
         self.innerTypes: dict[str, InnerType] = {}
         self.parameters: dict[str, Parameter] = {}
         self.pluginInfo: Optional[PluginInfo] = None
+        self.libSuffix = ''
 
     def main(self):
         self.load_parameter_config()
@@ -306,10 +307,17 @@ class ParameterGenerator:
             for dep in param.dependencies:
                 dep['obj'] = self.parameters[dep['name']]
 
+        self._get_lib_suffix()
+
+    def _get_lib_suffix(self):
+        if not self.libSuffix:
+            plugin_table = parse_premake_lua_table(self.pathMan.premakePluginLua)
+            self.libSuffix = plugin_table['sdk']['static']['libsuffix']
+
     def _generate(self):
-        def _generate_fx_params_h():
-            target = 'SoundEnginePlugin/ProjectNameFXParams.h'
-            dst = copy_template(target, self.pathMan, self.isForced)
+        def _generate_params_h():
+            target = f'SoundEnginePlugin/ProjectNameParams.h'
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True)
             util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
             util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
             util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
@@ -319,9 +327,9 @@ class ParameterGenerator:
             util.substitute_lines_in_file(self.__generate_declarations(struct='NonRTPC'), dst, '// [NonRTPCDeclaration]',
                                           '// [/NonRTPCDeclaration]')
 
-        def _generate_fx_params_cpp():
-            target = 'SoundEnginePlugin/ProjectNameFXParams.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced)
+        def _generate_params_cpp():
+            target = f'SoundEnginePlugin/ProjectNameParams.cpp'
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True)
             util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
                                           '// [/ParameterInitialization]')
             util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
@@ -331,13 +339,13 @@ class ParameterGenerator:
 
         def _generate_wwise_plugin_h():
             target = 'WwisePlugin/ProjectNamePlugin.h'
-            dst = copy_template(target, self.pathMan, self.isForced)
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
                                           '// [/PropertyNames]')
 
         def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced)
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
                                           '// [/PropertyNames]')
             util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
@@ -345,7 +353,7 @@ class ParameterGenerator:
 
         def _generate_wwise_xml():
             target = 'WwisePlugin/ProjectName.xml'
-            dst = copy_template(target, self.pathMan, self.isForced)
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->',
                                           '<!-- [/ParameterGui] -->')
             util.substitute_lines_in_file(self.__generate_platform_support(), dst, '<!-- [PlatformSupport] -->',
@@ -360,17 +368,17 @@ class ParameterGenerator:
         def _generate_win32_gui_resource():
             if self.generateGuiResource:
                 target = 'WwisePlugin/ProjectName.rc'
-                dst = copy_template(target, self.pathMan, self.isForced)
+                dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
                 util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
                 target = 'WwisePlugin/resource.h'
-                dst = copy_template(target, self.pathMan, self.isForced)
+                dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
                 util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced)
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
 
-        _generate_fx_params_h()
-        _generate_fx_params_cpp()
+        _generate_params_h()
+        _generate_params_cpp()
         _generate_wwise_plugin_h()
         _generate_wwise_plugin_cpp()
         _generate_wwise_xml()

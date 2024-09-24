@@ -43,7 +43,7 @@ def git_mv(src, dst):
         raise e
 
 
-def replace_in_basename(path: str, old: str, new: str, count=-1):
+def replace_in_basename(path, old: str, new: str, count=-1):
     return osp.join(osp.dirname(path), osp.basename(path).replace(old, new, count))
 
 
@@ -87,7 +87,7 @@ def add_indent(lines: list[str], indent: int):
     return [f'{" " * indent}{line}' for line in lines]
 
 
-def copy_template(relative, pathman: PathMan, is_forced=False):
+def copy_template(relative, pathman: PathMan, is_forced=False, lib_suffix='', add_suffix_after_project_name=False):
     def _need_overwrite(_dst):
         if is_forced:
             return True
@@ -97,7 +97,8 @@ def copy_template(relative, pathman: PathMan, is_forced=False):
         return True
 
     src = osp.join(pathman.templatesDir, relative)
-    dst = replace_in_basename(osp.join(pathman.root, relative), 'ProjectName', pathman.pluginName)
+    dst = replace_in_basename(osp.join(pathman.root, relative), 'ProjectName',
+                              pathman.pluginName + lib_suffix if add_suffix_after_project_name else pathman.pluginName)
     if not _need_overwrite(dst):
         logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
         return dst
@@ -108,7 +109,16 @@ def copy_template(relative, pathman: PathMan, is_forced=False):
                                              'name': pathman.pluginName,
                                              'display_name': pathman.pluginName,
                                              'plugin_id': pathman.pluginId,
+                                             'suffix': lib_suffix,
                                          })
         return dst
     else:
         raise FileNotFoundError(f'File not found: {src}')
+
+
+def parse_premake_lua_table(premake_plugin_lua_path):
+    from lupa import LuaRuntime
+    lua = LuaRuntime(unpack_returned_tuples=True)
+    lua.globals()['_AK_PREMAKE'] = True
+    plugin_table = lua.execute(util.load_text(premake_plugin_lua_path))
+    return plugin_table

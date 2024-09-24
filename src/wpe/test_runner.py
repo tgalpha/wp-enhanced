@@ -6,7 +6,7 @@ import kkpyutil as util
 import requests
 
 from wpe.pathman import PathMan
-from wpe.util import overwrite_copy, remove_ansi_color
+from wpe.util import overwrite_copy, remove_ansi_color, parse_premake_lua_table
 
 
 class TestRunner:
@@ -52,10 +52,7 @@ class TestRunner:
             })
 
         def extract_includes_from_premake():
-            from lupa import LuaRuntime
-            lua = LuaRuntime(unpack_returned_tuples=True)
-            lua.globals()['_AK_PREMAKE'] = True
-            plugin_table = lua.execute(util.load_text(self.pathMan.premakePluginLua))
+            plugin_table = parse_premake_lua_table(self.pathMan.premakePluginLua)
             includes = list(plugin_table['sdk']['static']['includedirs'].values())
             return includes
 

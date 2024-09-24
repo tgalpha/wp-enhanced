@@ -25,19 +25,19 @@ the specific language governing permissions and limitations under the License.
 *******************************************************************************/
 // [wp-enhanced template] **Do not delete this line**
 
-#include "%(name)sFXParams.h"
+#include "%(name)s%(suffix)sParams.h"
 
 #include <AK/Tools/Common/AkBankReadHelpers.h>
 
-%(name)sFXParams::%(name)sFXParams()
+%(name)s%(suffix)sParams::%(name)s%(suffix)sParams()
 {
 }
 
-%(name)sFXParams::~%(name)sFXParams()
+%(name)s%(suffix)sParams::~%(name)s%(suffix)sParams()
 {
 }
 
-%(name)sFXParams::%(name)sFXParams(const %(name)sFXParams& in_rParams)
+%(name)s%(suffix)sParams::%(name)s%(suffix)sParams(const %(name)s%(suffix)sParams& in_rParams)
 {
     InnerType = in_rParams.InnerType;
     RTPC = in_rParams.RTPC;
@@ -45,12 +45,12 @@ the specific language governing permissions and limitations under the License.
     m_paramChangeHandler.SetAllParamChanges();
 }
 
-AK::IAkPluginParam* %(name)sFXParams::Clone(AK::IAkPluginMemAlloc* in_pAllocator)
+AK::IAkPluginParam* %(name)s%(suffix)sParams::Clone(AK::IAkPluginMemAlloc* in_pAllocator)
 {
-    return AK_PLUGIN_NEW(in_pAllocator, %(name)sFXParams(*this));
+    return AK_PLUGIN_NEW(in_pAllocator, %(name)s%(suffix)sParams(*this));
 }
 
-AKRESULT %(name)sFXParams::Init(AK::IAkPluginMemAlloc* in_pAllocator, const void* in_pParamsBlock, AkUInt32 in_ulBlockSize)
+AKRESULT %(name)s%(suffix)sParams::Init(AK::IAkPluginMemAlloc* in_pAllocator, const void* in_pParamsBlock, AkUInt32 in_ulBlockSize)
 {
     if (in_ulBlockSize == 0)
     {
@@ -65,13 +65,13 @@ AKRESULT %(name)sFXParams::Init(AK::IAkPluginMemAlloc* in_pAllocator, const void
     return SetParamsBlock(in_pParamsBlock, in_ulBlockSize);
 }
 
-AKRESULT %(name)sFXParams::Term(AK::IAkPluginMemAlloc* in_pAllocator)
+AKRESULT %(name)s%(suffix)sParams::Term(AK::IAkPluginMemAlloc* in_pAllocator)
 {
     AK_PLUGIN_DELETE(in_pAllocator, this);
     return AK_Success;
 }
 
-AKRESULT %(name)sFXParams::SetParamsBlock(const void* in_pParamsBlock, AkUInt32 in_ulBlockSize)
+AKRESULT %(name)s%(suffix)sParams::SetParamsBlock(const void* in_pParamsBlock, AkUInt32 in_ulBlockSize)
 {
     AKRESULT eResult = AK_Success;
     AkUInt8* pParamsBlock = (AkUInt8*)in_pParamsBlock;
@@ -86,7 +86,7 @@ AKRESULT %(name)sFXParams::SetParamsBlock(const void* in_pParamsBlock, AkUInt32 
     return eResult;
 }
 
-AKRESULT %(name)sFXParams::SetParam(AkPluginParamID in_paramID, const void* in_pValue, AkUInt32 in_ulParamSize)
+AKRESULT %(name)s%(suffix)sParams::SetParam(AkPluginParamID in_paramID, const void* in_pValue, AkUInt32 in_ulParamSize)
 {
     AKRESULT eResult = AK_Success;
 

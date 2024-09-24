@@ -25,8 +25,8 @@ the specific language governing permissions and limitations under the License.
 *******************************************************************************/
 // [wp-enhanced template] **Do not delete this line**
 
-#ifndef %(name)sFXParams_H
-#define %(name)sFXParams_H
+#ifndef %(name)s%(suffix)sParams_H
+#define %(name)s%(suffix)sParams_H
 
 #include <AK/SoundEngine/Common/IAkPlugin.h>
 #include <AK/Plugin/PluginServices/AkFXParameterChangeHandler.h>
@@ -60,13 +60,13 @@ struct %(name)sNonRTPCParams
     // [/NonRTPCDeclaration]
 };
 
-struct %(name)sFXParams
+struct %(name)s%(suffix)sParams
     : public AK::IAkPluginParam
 {
-    %(name)sFXParams();
-    %(name)sFXParams(const %(name)sFXParams& in_rParams);
+    %(name)s%(suffix)sParams();
+    %(name)s%(suffix)sParams(const %(name)s%(suffix)sParams& in_rParams);
 
-    ~%(name)sFXParams();
+    ~%(name)s%(suffix)sParams();
 
     /// Create a duplicate of the parameter node instance in its current state.
     IAkPluginParam* Clone(AK::IAkPluginMemAlloc* in_pAllocator) override;
@@ -94,4 +94,4 @@ private:
     AK::AkFXParameterChangeHandler<NUM_PARAMS> m_paramChangeHandler;
 };
 
-#endif // %(name)sFXParams_H
+#endif // %(name)s%(suffix)sParams_H

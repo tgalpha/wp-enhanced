@@ -26,7 +26,7 @@ the specific language governing permissions and limitations under the License.
 // [wp-enhanced template] **Do not delete this line**
 
 #include "%(name)sPlugin.h"
-#include "../SoundEnginePlugin/%(name)sFXFactory.h"
+#include "../SoundEnginePlugin/%(name)s%(suffix)sFactory.h"
 
 // [PropertyNames]
 // [/PropertyNames]
@@ -54,7 +54,7 @@ EXPORT_AUDIOPLUGIN_CONTAINER(%(name)s);											// This is a DLL, we want to h
 ADD_AUDIOPLUGIN_CLASS_TO_CONTAINER(                                             // Add our CLI class to the PluginContainer
     %(name)s,        // Name of the plug-in container for this shared library
     %(name)sPlugin,  // Authoring plug-in class to add to the plug-in container
-    %(name)sFX       // Corresponding Sound Engine plug-in class
+    %(name)s%(suffix)s       // Corresponding Sound Engine plug-in class
 );
 DEFINE_PLUGIN_REGISTER_HOOK
 
