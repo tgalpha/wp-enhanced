@@ -190,9 +190,27 @@ class Parameter:
   <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>{_generate_dependencies()}
 </Property>'''.splitlines()
 
+        def _generate_float_gui_lines():
+            user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}"'
+            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
+  <UserInterface {user_interface} />
+  <DefaultValue>{self.defaultValue}</DefaultValue>
+  <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
+  <Restrictions>
+    <ValueRestriction>
+      <Range Type="{self.xmlTypeName}">
+        <Min>{self.minValue}</Min>
+        <Max>{self.maxValue}</Max>
+      </Range>
+    </ValueRestriction>
+  </Restrictions>{_generate_dependencies()}
+</Property>'''.splitlines()
+
         def _generate_int_gui_lines():
             user_interface = self.userInterface
             if not self.enumeration:
+                if self.minValue is not None and self.maxValue is not None:
+                    return _generate_float_gui_lines()
                 return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
                   <UserInterface {user_interface} />
                   <DefaultValue>{self.defaultValue}</DefaultValue>
@@ -208,22 +226,6 @@ class Parameter:
       <Enumeration Type="{self.xmlTypeName}"> 
         {options}
       </Enumeration>
-    </ValueRestriction>
-  </Restrictions>{_generate_dependencies()}
-</Property>'''.splitlines()
-
-        def _generate_float_gui_lines():
-            user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}"'
-            return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
-  <UserInterface {user_interface} />
-  <DefaultValue>{self.defaultValue}</DefaultValue>
-  <AudioEnginePropertyID>{self.id}</AudioEnginePropertyID>
-  <Restrictions>
-    <ValueRestriction>
-      <Range Type="{self.xmlTypeName}">
-        <Min>{self.minValue}</Min>
-        <Max>{self.maxValue}</Max>
-      </Range>
     </ValueRestriction>
   </Restrictions>{_generate_dependencies()}
 </Property>'''.splitlines()
