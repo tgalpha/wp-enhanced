@@ -110,17 +110,11 @@ class Worker:
         self.wpWrapper.wp(self.args.wp)
 
     def new(self):
-        def _copy_win32_gui_resource():
-            wpe_util.copy_template('WwisePlugin/ProjectName.rc', self.pathMan)
-            wpe_util.copy_template('WwisePlugin/resource.h', self.pathMan)
-            wpe_util.copy_template('WwisePlugin/Win32/ProjectNamePluginGUI.h', self.pathMan)
-            wpe_util.copy_template('WwisePlugin/Win32/ProjectNamePluginGUI.cpp', self.pathMan)
-
         logging.info('Create new project')
         self.wpWrapper.new()
         self.init_wpe()
         self._lazy_load_configs()
-        _copy_win32_gui_resource()
+        self.generate_parameters()
         self.premake()
         logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
 

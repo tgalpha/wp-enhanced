@@ -368,16 +368,16 @@ class ParameterGenerator:
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
         def _generate_win32_gui_resource():
+            target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
+            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             if self.generateGuiResource:
+                util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
                 target = 'WwisePlugin/ProjectName.rc'
                 dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
                 util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
                 target = 'WwisePlugin/resource.h'
                 dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
                 util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
-            target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
 
         _generate_params_h()
         _generate_params_cpp()

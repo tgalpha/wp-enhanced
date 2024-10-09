@@ -2,8 +2,7 @@
 // [wp-enhanced template] **Do not delete this line**
 
 #include "../%(name)sPlugin.h"
-//  [wp-enhanced] Uncomment the following lines if you want to use a custom GUI
-//  #include "../resource.h"
+#include "../resource.h"
 
 class %(name)sPluginGUI final
 	: public AK::Wwise::Plugin::PluginMFCWindows<>
