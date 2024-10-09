@@ -2,7 +2,7 @@
     <configuration_1>
         <option name="CONFIGURATION" value="Debug" />
         <option name="PLATFORM" value="x64" />
-        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_vc160.vcxproj" />
+        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_%(toolset)s.vcxproj" />
         <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
         <option name="EXE_PATH" value="$(WWISEROOT)\Authoring\x64\Release\bin\Wwise.exe" />
         <option name="PROGRAM_PARAMETERS" value="" />
@@ -14,7 +14,7 @@
     <configuration_2>
         <option name="CONFIGURATION" value="Release" />
         <option name="PLATFORM" value="x64" />
-        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_vc160.vcxproj" />
+        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_%(toolset)s.vcxproj" />
         <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
         <option name="EXE_PATH" value="$(WWISEROOT)\Authoring\x64\Release\bin\Wwise.exe" />
         <option name="PROGRAM_PARAMETERS" value="" />
@@ -26,7 +26,7 @@
     <configuration_3>
         <option name="CONFIGURATION" value="Debug" />
         <option name="PLATFORM" value="Win32" />
-        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_vc160.vcxproj" />
+        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_%(toolset)s.vcxproj" />
         <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
         <option name="EXE_PATH" value="$(WWISEROOT)\Authoring\x64\Release\bin\Wwise.exe" />
         <option name="PROGRAM_PARAMETERS" value="" />
@@ -38,7 +38,7 @@
     <configuration_4>
         <option name="CONFIGURATION" value="Release" />
         <option name="PLATFORM" value="Win32" />
-        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_vc160.vcxproj" />
+        <option name="PROJECT_FILE_PATH" value="$PROJECT_DIR$/WwisePlugin/%(name)s_Authoring_Windows_%(toolset)s.vcxproj" />
         <option name="CURRENT_LAUNCH_PROFILE" value="Local" />
         <option name="EXE_PATH" value="$(WWISEROOT)\Authoring\x64\Release\bin\Wwise.exe" />
         <option name="PROGRAM_PARAMETERS" value="" />

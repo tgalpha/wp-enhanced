@@ -1,5 +1,6 @@
 import os.path as osp
 import glob
+import re
 import xml.etree.ElementTree as ET
 
 import kkpyutil as util
@@ -11,7 +12,7 @@ class JbRunManager:
     def __init__(self, pathman: PathMan):
         self.pathMan = pathman
         self.workspaceXmlPaths = []
-        self.runConfigXml = None
+        self.template = None
 
     def lazy_add_run_config(self):
         if self._find_workspace_xml():
@@ -26,11 +27,8 @@ class JbRunManager:
         return bool(self.workspaceXmlPaths)
 
     def _load_template(self):
-        template = osp.join(self.pathMan.templatesDir, '_idea', 'JetBrainsRunConfig.xml')
-        content = util.load_text(template) % {
-            'name': self.pathMan.pluginName,
-        }
-        self.runConfigXml = ET.fromstring(content)
+        template_path = osp.join(self.pathMan.templatesDir, '_idea', 'JetBrainsRunConfig.xml')
+        self.template = util.load_text(template_path)
 
     def _add_run_config(self):
         for workspaceXmlPath in self.workspaceXmlPaths:
@@ -53,6 +51,8 @@ class JbRunManager:
 
         run_wwise_config = run_manager.find('configuration[@name="run with wwise"]')
         if run_wwise_config is None:
-            run_manager.append(self.runConfigXml)
+            toolset = re.findall(r'vc\d+', workspace)[0]
+            run_config = ET.fromstring(self.template % {'name': self.pathMan.pluginName, 'toolset': toolset})
+            run_manager.append(run_config)
 
         workspace_xml.write(workspace, encoding='utf-8', xml_declaration=True)
