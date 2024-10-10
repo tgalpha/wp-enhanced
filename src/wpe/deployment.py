@@ -13,14 +13,14 @@ class _Package:
     def __init__(self, meta_dict):
         self.meta = meta_dict
 
-    def should_deploy(self, target_dir):
-        return self.source_name().endswith('.tar.xz') and self.is_sdk_package()
-
     def source_name(self) -> str:
         return self.meta['sourceName']
 
     def is_sdk_package(self) -> bool:
         return self.belong_to_packages() == 'SDK'
+
+    def is_authoring_package(self) -> bool:
+        return self.belong_to_packages() == 'Authoring'
 
     def belong_to_packages(self):
         return self._get_group_value_by_id('Packages')
@@ -45,6 +45,9 @@ class Deployment:
 
     @staticmethod
     def create(args):
+        if osp.isfile(osp.join(args.destProject, 'Authoring', 'x64', 'Release', 'bin', 'Wwise.exe')):
+            print('Target: UE project detected.')
+            return AuthoringDeployment(args)
         if glob.glob(osp.join(args.destProject, '*.uproject')):
             print('Target: UE project detected.')
             return UEDeployment(args)
@@ -63,8 +66,7 @@ class Deployment:
                 print(f'Deploying {bundle["name"]} (id: {bundle["id"]})...')
                 for file in bundle['files']:
                     pkg = _Package(file)
-                    if pkg.should_deploy(self.projectRoot):
-                        self._deploy_package(zip_ref, pkg)
+                    self._deploy_package(zip_ref, pkg)
 
     def _deploy_package(self, zip_ref: zipfile.ZipFile, pkg: _Package):
         raise NotImplementedError('subclass it')
@@ -100,6 +102,9 @@ class UEDeployment(Deployment):
         self.pluginDeployDir = osp.join(self.projectRoot, 'Plugins', 'Wwise', 'ThirdParty')
 
     def _deploy_package(self, zip_ref: zipfile.ZipFile, pkg: _Package):
+        if not pkg.is_sdk_package():
+            return
+
         zip_info = next(f for f in zip_ref.filelist if f.filename.endswith(pkg.source_name()))
         with zip_ref.open(zip_info) as f:
             with lzma.open(f) as xz:
@@ -114,6 +119,25 @@ class UEDeployment(Deployment):
                     parent = member.name.split('/')[0]
                     if osp.isdir(osp.join(self.pluginDeployDir, parent)):
                         tar.extractall(self.pluginDeployDir)
-                        print('\n'.join([osp.normpath(osp.join(self.pluginDeployDir, member.name)) for member in tar.getmembers()]))
+                        print('\n'.join([extracted for member in tar.getmembers() if osp.isfile(
+                            extracted := osp.normpath(osp.join(self.pluginDeployDir, member.name)))]))
                     else:
                         print(f'Parent directory dose not exist, skip: {parent}')
+
+
+class AuthoringDeployment(Deployment):
+    def __init__(self, args):
+        super().__init__(args)
+        self.pluginDeployDir = self.projectRoot
+
+    def _deploy_package(self, zip_ref: zipfile.ZipFile, pkg: _Package):
+        if not pkg.is_authoring_package():
+            return
+
+        zip_info = next(f for f in zip_ref.filelist if f.filename.endswith(pkg.source_name()))
+        with zip_ref.open(zip_info) as f:
+            with lzma.open(f) as xz:
+                with tarfile.open(fileobj=xz) as tar:
+                    tar.extractall(self.pluginDeployDir)
+                    print('\n'.join([extracted for member in tar.getmembers() if osp.isfile(
+                        extracted := osp.normpath(osp.join(self.pluginDeployDir, member.name)))]))

@@ -25,7 +25,7 @@ def add_deploy_parser(subparsers):
         dest='destProject',
         required=True,
         default='',
-        help='Destination project root path.'
+        help='Destination project root path. current supported: Authoring, Unreal'
     )
 
 

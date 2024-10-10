@@ -32,7 +32,7 @@ rtpc_type = 'Exclusive'
 default_value = 0
 
 # Fields below are optional
-# Description displayed in Wwise UI. Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=effectplugin_tools_property_help.html
+# Description displayed in Wwise UI. Refer to: https://www.audiokinetic.com/library/edge/?source=SDK&id=effectplugin_tools_property_help.html
 description = [
     { language = 'en', text = 'This is a description for this parameter' },
     { language = 'zh', text = '这是一个参数的描述' }
@@ -53,7 +53,7 @@ dependencies = [
 [parameters.defines.float_param_as_slider]
 type = 'float'
 rtpc_type = 'Exclusive'
-# Optional, Refer to `DataMeaning` section in: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
+# Optional, Refer to `DataMeaning` section in: https://www.audiokinetic.com/library/edge/?source=SDK&id=plugin_xml_properties.html
 data_meaning = 'Decibels'
 default_value = 0
 min_value = -96
@@ -63,5 +63,5 @@ description = [
     { language = 'en', text = 'This is a description for this parameter' },
     { language = 'zh', text = '这是一个参数的描述' }
 ]
-# Refer to: https://www.audiokinetic.com/zh/library/edge/?source=SDK&id=plugin_xml_properties.html
+# Refer to: https://www.audiokinetic.com/library/edge/?source=SDK&id=plugin_xml_properties.html
 user_interface = 'SliderType="6" Step="0.1" Fine="0.01" Decimals="2"'
