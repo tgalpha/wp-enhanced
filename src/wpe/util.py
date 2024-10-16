@@ -91,14 +91,15 @@ def copy_template(relative, pathman: PathMan, is_forced=False, lib_suffix='', ad
     def _need_overwrite(_dst):
         if is_forced:
             return True
-        if osp.isfile(_dst):
-            content = util.load_text(_dst)
-            return '[wp-enhanced template]' not in content
-        return True
+        content = util.load_text(_dst)
+        return '[wp-enhanced template]' not in content
 
     src = osp.join(pathman.templatesDir, relative)
     dst = replace_in_basename(osp.join(pathman.root, relative), 'ProjectName',
                               pathman.pluginName + lib_suffix if add_suffix_after_project_name else pathman.pluginName)
+    if not osp.isfile(dst):
+        logging.info(f'Destination file "{osp.basename(dst)}" does not exist. Skipping...')
+        return None
     if not _need_overwrite(dst):
         logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
         return dst

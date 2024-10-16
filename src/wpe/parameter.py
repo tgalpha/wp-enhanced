@@ -76,7 +76,7 @@ class Parameter:
     dependencies: list[dict] = field(default_factory=list)
     displayName: str = ''
     enumeration: list[dict] = field(default_factory=list)
-    userInterface: dict = field(default_factory=dict)
+    userInterface: str = ''
     id: int = 0
     parent: Optional[InnerType] = None
     basename: str = ''
@@ -156,7 +156,7 @@ class Parameter:
         getter = 'Get' + util.convert_compound_cases(self.typeName.lstrip('Ak'))
         return f'in_dataWriter.{writer}(m_propertySet.{getter}(in_guidPlatform, sz{self.propertyName}));'
 
-    def generate_parameter_gui(self) -> list[str]:
+    def generate_xml_property(self) -> list[str]:
         def _generate_dependencies():
             if not self.dependencies:
                 return ''
@@ -317,51 +317,48 @@ class ParameterGenerator:
             self.libSuffix = plugin_table['sdk']['static']['libsuffix']
 
     def _generate(self):
-        def _generate_params_h():
-            target = f'SoundEnginePlugin/ProjectNameParams.h'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True)
-            util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
-            util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
-            util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
-                                          '// [/InnerTypeDeclaration]')
-            util.substitute_lines_in_file(self.__generate_declarations(struct='RTPC'), dst, '// [RTPCDeclaration]',
-                                          '// [/RTPCDeclaration]')
-            util.substitute_lines_in_file(self.__generate_declarations(struct='NonRTPC'), dst, '// [NonRTPCDeclaration]',
-                                          '// [/NonRTPCDeclaration]')
+        def _generate_params_h(template_name='ProjectNameParams'):
+            target = f'SoundEnginePlugin/{template_name}.h'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True):
+                util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
+                util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
+                util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
+                                              '// [/InnerTypeDeclaration]')
+                util.substitute_lines_in_file(self.__generate_declarations(struct='RTPC'), dst, '// [RTPCDeclaration]',
+                                              '// [/RTPCDeclaration]')
+                util.substitute_lines_in_file(self.__generate_declarations(struct='NonRTPC'), dst, '// [NonRTPCDeclaration]',
+                                              '// [/NonRTPCDeclaration]')
 
-        def _generate_params_cpp():
-            target = f'SoundEnginePlugin/ProjectNameParams.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True)
-            util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
-                                          '// [/ParameterInitialization]')
-            util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
-                                          '// [/ReadBankData]')
-            util.substitute_lines_in_file(self.__generate_set_parameter(), dst, '// [SetParameters]',
-                                          '// [/SetParameters]', withindent=False)
+        def _generate_params_cpp(template_name='ProjectNameParams'):
+            target = f'SoundEnginePlugin/{template_name}.cpp'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True):
+                util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
+                                              '// [/ParameterInitialization]')
+                util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
+                                              '// [/ReadBankData]')
+                util.substitute_lines_in_file(self.__generate_set_parameter(), dst, '// [SetParameters]',
+                                              '// [/SetParameters]', withindent=False)
 
         def _generate_wwise_plugin_h():
             target = 'WwisePlugin/ProjectNamePlugin.h'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
-                                          '// [/PropertyNames]')
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+                util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
+                                              '// [/PropertyNames]')
 
         def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
-                                          '// [/PropertyNames]')
-            util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
-                                          '// [/WriteBankData]')
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+                util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
+                                              '// [/PropertyNames]')
+                util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
+                                              '// [/WriteBankData]')
 
         def _generate_wwise_xml():
-            target = 'WwisePlugin/ProjectName.xml'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            util.substitute_lines_in_file(self.__generate_parameter_gui(), dst, '<!-- [ParameterGui] -->',
-                                          '<!-- [/ParameterGui] -->')
-            util.substitute_lines_in_file(self.__generate_platform_support(), dst, '<!-- [PlatformSupport] -->',
-                                          '<!-- [/PlatformSupport] -->')
-            util.substitute_lines_in_file(self.__generate_plugin_info(), dst, '<!-- [PluginInfo] -->',
-                                          '<!-- [/PluginInfo] -->')
+            if dst := osp.join(self.pathMan.root, f'WwisePlugin/{self.pathMan.pluginName}.xml'):
+                util.substitute_lines_in_file(self.__generate_xml_properties(), dst, '<Properties>',
+                                              '</Properties>')
+                util.substitute_lines_in_file(self.__generate_xml_plugin_info(), dst, '<PluginInfo',
+                                              '</PluginInfo>', removecues=True)
 
         def _generate_doc():
             for param in self.parameters.values():
@@ -370,17 +367,25 @@ class ParameterGenerator:
         def _generate_win32_gui_resource():
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
             dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            if self.generateGuiResource:
+            if not self.generateGuiResource:
+                return
+            if dst:
                 util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
-                target = 'WwisePlugin/ProjectName.rc'
-                dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
+
+            target = 'WwisePlugin/ProjectName.rc'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
-                target = 'WwisePlugin/resource.h'
-                dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
+
+            target = 'WwisePlugin/resource.h'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
 
         _generate_params_h()
         _generate_params_cpp()
+        # For MetaData plugin, which use ProjectNameMeta as file name
+        # 'Mete' suffix will be added so that template name don't contain 'Meta'
+        _generate_params_h(template_name='ProjectName')
+        _generate_params_cpp(template_name='ProjectName')
         _generate_wwise_plugin_h()
         _generate_wwise_plugin_cpp()
         _generate_wwise_xml()
@@ -473,17 +478,13 @@ class ParameterGenerator:
             lines.append(param.generate_write_bank_data())
         return auto_add_line_end(lines)
 
-    def __generate_parameter_gui(self):
+    def __generate_xml_properties(self):
         lines = []
         for param in self.parameters.values():
-            lines.extend(param.generate_parameter_gui())
+            lines.extend(add_indent(param.generate_xml_property(), 2))
         return auto_add_line_end(lines)
 
-    def __generate_platform_support(self):
-        logging.warning('Deprecated tag: "PlatformSupport", please migrate to "PluginInfo" instead.')
-        return auto_add_line_end(self.pluginInfo.generate_platform_support())
-
-    def __generate_plugin_info(self):
+    def __generate_xml_plugin_info(self):
         return auto_add_line_end(self.pluginInfo.generate_plugin_info())
 
     def __generate_win32_controls(self):
