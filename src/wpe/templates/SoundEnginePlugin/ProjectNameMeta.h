@@ -23,6 +23,7 @@ the specific language governing permissions and limitations under the License.
 
   Copyright (c) 2021 Audiokinetic Inc.
 *******************************************************************************/
+// [wp-enhanced template] **Do not delete this line**
 
 #ifndef %(name)sMeta_H
 #define %(name)sMeta_H

@@ -280,6 +280,7 @@ class ParameterGenerator:
         self.parameters: dict[str, Parameter] = {}
         self.pluginInfo: Optional[PluginInfo] = None
         self.libSuffix = ''
+        self.isMetadataPlugin = False
 
     def main(self):
         self.load_parameter_config()
@@ -315,11 +316,12 @@ class ParameterGenerator:
         if not self.libSuffix:
             plugin_table = parse_premake_lua_table(self.pathMan.premakePluginLua)
             self.libSuffix = plugin_table['sdk']['static']['libsuffix']
+            self.isMetadataPlugin = self.libSuffix == 'Meta'
 
     def _generate(self):
-        def _generate_params_h(template_name='ProjectNameParams'):
-            target = f'SoundEnginePlugin/{template_name}.h'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True):
+        def _generate_params_h():
+            target = 'SoundEnginePlugin/ProjectNameMeta.h' if self.isMetadataPlugin else 'SoundEnginePlugin/ProjectNameParams.h'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
                 util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
                 util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
                 util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
@@ -329,9 +331,9 @@ class ParameterGenerator:
                 util.substitute_lines_in_file(self.__generate_declarations(struct='NonRTPC'), dst, '// [NonRTPCDeclaration]',
                                               '// [/NonRTPCDeclaration]')
 
-        def _generate_params_cpp(template_name='ProjectNameParams'):
-            target = f'SoundEnginePlugin/{template_name}.cpp'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=True):
+        def _generate_params_cpp():
+            target = 'SoundEnginePlugin/ProjectNameMeta.cpp' if self.isMetadataPlugin else 'SoundEnginePlugin/ProjectNameParams.cpp'
+            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
                 util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
                                               '// [/ParameterInitialization]')
                 util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
@@ -382,10 +384,6 @@ class ParameterGenerator:
 
         _generate_params_h()
         _generate_params_cpp()
-        # For MetaData plugin, which use ProjectNameMeta as file name
-        # 'Mete' suffix will be added so that template name don't contain 'Meta'
-        _generate_params_h(template_name='ProjectName')
-        _generate_params_cpp(template_name='ProjectName')
         _generate_wwise_plugin_h()
         _generate_wwise_plugin_cpp()
         _generate_wwise_xml()
