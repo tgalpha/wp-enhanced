@@ -1,7 +1,7 @@
 import argparse
+import sys
 
 from wpe.core import Worker
-from wpe.global_config import ConfigKey
 
 
 def add_deploy_parser(subparsers):
@@ -74,6 +74,20 @@ def add_build_agent_parser(subparsers):
 
 
 def add_config_parser(subparsers):
+    def add_key_value_args(parser):
+        parser.add_argument(
+            'key',
+            type=str,
+            default='',
+            help='Setting key.'
+        )
+        parser.add_argument(
+            'value',
+            type=str,
+            default='',
+            help='Setting value.'
+        )
+
     subparser = subparsers.add_parser(
         'config',
         add_help=True,
@@ -89,20 +103,8 @@ def add_config_parser(subparsers):
         help='List all configuration settings.'
     )
 
-    options, remainder = subparser.parse_known_args()
-    if not options.list:
-        subparser.add_argument(
-            'key',
-            type=str,
-            default='',
-            help='Setting key.'
-        )
-        subparser.add_argument(
-            'value',
-            type=str,
-            default='',
-            help='Setting value.'
-        )
+    if '-h' in sys.argv or not subparser.parse_known_args()[0].list:
+        add_key_value_args(subparser)
 
 
 def main():
