@@ -1,6 +1,7 @@
 import argparse
 
 from wpe.core import Worker
+from wpe.global_config import ConfigKey
 
 
 def add_deploy_parser(subparsers):
@@ -72,6 +73,38 @@ def add_build_agent_parser(subparsers):
     )
 
 
+def add_config_parser(subparsers):
+    subparser = subparsers.add_parser(
+        'config',
+        add_help=True,
+        description='Manages configuration settings.'
+    )
+    subparser.add_argument(
+        '-l',
+        '--list',
+        action='store_true',
+        dest='list',
+        default=False,
+        required=False,
+        help='List all configuration settings.'
+    )
+
+    options, remainder = subparser.parse_known_args()
+    if not options.list:
+        subparser.add_argument(
+            'key',
+            type=str,
+            default='',
+            help='Setting key.'
+        )
+        subparser.add_argument(
+            'value',
+            type=str,
+            default='',
+            help='Setting value.'
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog='wpe',
@@ -85,6 +118,7 @@ def main():
     add_deploy_parser(subparsers)
     add_clean_parser(subparsers)
     add_build_agent_parser(subparsers)
+    add_config_parser(subparsers)
 
     command_group = parser.add_mutually_exclusive_group()
     command_group.add_argument(

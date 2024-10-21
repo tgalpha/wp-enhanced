@@ -10,6 +10,7 @@ from distutils.file_util import copy_file
 from pathlib import Path
 
 import kkpyutil as util
+import toml
 
 from wpe.pathman import PathMan
 
@@ -30,6 +31,11 @@ def load_toml(path):
     with open(path, 'rb') as f:
         toml_content = tomllib.load(f)
     return toml_content
+
+
+def save_toml(path, content):
+    with open(path, 'w') as f:
+        toml.dump(content, f)
 
 
 def git_mv(src, dst):
@@ -123,3 +129,10 @@ def parse_premake_lua_table(premake_plugin_lua_path):
     lua.globals()['_AK_PREMAKE'] = True
     plugin_table = lua.execute(util.load_text(premake_plugin_lua_path))
     return plugin_table
+
+
+def convert_to_wsl_path(path: str):
+    abs_path = osp.abspath(path)
+    driver, relpath = abs_path.split(':\\')
+    relpath = relpath.replace("\\", "/")
+    return f'/mnt/{driver.lower()}/{relpath}'

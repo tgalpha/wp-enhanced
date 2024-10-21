@@ -21,6 +21,7 @@ from wpe.jb_run_manager import JbRunManager
 from wpe.deployment import Deployment
 from wpe import constants
 from wpe.build_agent import BuildAgent
+from wpe.global_config import GlobalConfig
 
 
 class Worker:
@@ -56,6 +57,7 @@ class Worker:
         HookProcessor().init(self.pathMan, self.args)
 
     def main(self):
+        GlobalConfig().load()
         self.wpWrapper.validate_env()
 
         if self.args.subcommand == 'build-agent':
@@ -104,6 +106,9 @@ class Worker:
 
         if self.args.subcommand == 'clean':
             self.clean()
+
+        if self.args.subcommand == 'config':
+            GlobalConfig().handle_command(self.args)
 
     def wp(self):
         logging.info('Run wp.py')

@@ -5,7 +5,7 @@ import platform
 import kkpyutil as util
 
 # project
-from wpe.util import *
+import wpe.util as wpe_util
 from wpe.pathman import PathMan
 
 
@@ -33,7 +33,7 @@ class PluginInfo:
         return [
             f'<PluginInfo MenuPath="{self.infoDict["MenuPath"]}">' if self.infoDict["MenuPath"] else '<PluginInfo>',
             '  <PlatformSupport>',
-            *add_indent(self.generate_platform_support(), 4),
+            *wpe_util.add_indent(self.generate_platform_support(), 4),
             '  </PlatformSupport>',
             '</PluginInfo>'
         ]
@@ -68,11 +68,11 @@ class ProjectConfig:
 
     def load(self):
         if osp.isfile(self.pathMan.projConfig):
-            self.config = load_toml(self.pathMan.projConfig)
+            self.config = wpe_util.load_toml(self.pathMan.projConfig)
             return
 
         if osp.isfile(self.pathMan.parameterConfig):
-            self.config = load_toml(self.pathMan.parameterConfig)
+            self.config = wpe_util.load_toml(self.pathMan.parameterConfig)
             logging.warning('wpe_parameters.toml is deprecated. Please rename it to wpe_project.toml.')
             return
 

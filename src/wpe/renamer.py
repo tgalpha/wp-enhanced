@@ -5,7 +5,7 @@ import subprocess
 
 from wpe.pathman import PathMan
 from wpe.project_config import ProjectConfig
-import wpe.util as wutil
+import wpe.util as wpe_util
 
 
 class Renamer:
@@ -14,7 +14,7 @@ class Renamer:
         self.newName = new_name
         self.pathMan = pathman
         self.projConfig = proj_config
-        self.renameMethod = wutil.git_mv if wutil.path_is_under_git_repo(self.pathMan.root) else os.rename
+        self.renameMethod = wpe_util.git_mv if wpe_util.path_is_under_git_repo(self.pathMan.root) else os.rename
 
     def main(self):
         self._delete_generated_files()
@@ -33,7 +33,7 @@ class Renamer:
         ]
         for target in targets:
             for path in glob.iglob(osp.join(self.pathMan.root, target)):
-                wutil.remove_path(path)
+                wpe_util.remove_path(path)
 
     def _migrate_sources(self):
         targets = [
@@ -52,11 +52,11 @@ class Renamer:
                 if not osp.exists(old_path):
                     continue
                 if self.oldName in osp.basename(old_path):
-                    new_path = wutil.replace_in_basename(osp.join(self.pathMan.root, old_path), self.oldName, self.newName, count=1)
+                    new_path = wpe_util.replace_in_basename(osp.join(self.pathMan.root, old_path), self.oldName, self.newName, count=1)
                     self.renameMethod(old_path, new_path)
                 else:
                     new_path = old_path
-                wutil.replace_content_in_file(new_path, self.oldName, self.newName)
+                wpe_util.replace_content_in_file(new_path, self.oldName, self.newName)
 
     def _move_proj_folder(self):
         new_proj_root = osp.join(osp.dirname(self.pathMan.root), self.newName)

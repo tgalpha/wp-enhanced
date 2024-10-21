@@ -1,12 +1,14 @@
 import copy
+import os.path as osp
 from typing import Any, Optional
 from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 
+import kkpyutil as util
 
 # project
-from wpe.util import *
+import wpe.util as wpe_util
 from wpe.project_config import ProjectConfig, PluginInfo
 
 _type_prefix_map = {
@@ -314,14 +316,14 @@ class ParameterGenerator:
 
     def _get_lib_suffix(self):
         if not self.libSuffix:
-            plugin_table = parse_premake_lua_table(self.pathMan.premakePluginLua)
+            plugin_table = wpe_util.parse_premake_lua_table(self.pathMan.premakePluginLua)
             self.libSuffix = plugin_table['sdk']['static']['libsuffix']
             self.isMetadataPlugin = self.libSuffix == 'Meta'
 
     def _generate(self):
         def _generate_params_h():
             target = 'SoundEnginePlugin/ProjectNameMeta.h' if self.isMetadataPlugin else 'SoundEnginePlugin/ProjectNameParams.h'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
                 util.substitute_lines_in_file(self.__generate_ids(), dst, '// [ParameterID]', '// [/ParameterID]')
                 util.substitute_lines_in_file(self.__generate_inner_types(), dst, '// [InnerTypes]', '// [/InnerTypes]')
                 util.substitute_lines_in_file(self.__generate_declarations(struct='InnerType'), dst, '// [InnerTypeDeclaration]',
@@ -333,7 +335,7 @@ class ParameterGenerator:
 
         def _generate_params_cpp():
             target = 'SoundEnginePlugin/ProjectNameMeta.cpp' if self.isMetadataPlugin else 'SoundEnginePlugin/ProjectNameParams.cpp'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, add_suffix_after_project_name=not self.isMetadataPlugin):
                 util.substitute_lines_in_file(self.__generate_init(), dst, '// [ParameterInitialization]',
                                               '// [/ParameterInitialization]')
                 util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
@@ -343,13 +345,13 @@ class ParameterGenerator:
 
         def _generate_wwise_plugin_h():
             target = 'WwisePlugin/ProjectNamePlugin.h'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_property_name_declaration(), dst, '// [PropertyNames]',
                                               '// [/PropertyNames]')
 
         def _generate_wwise_plugin_cpp():
             target = 'WwisePlugin/ProjectNamePlugin.cpp'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_property_name_definition(), dst, '// [PropertyNames]',
                                               '// [/PropertyNames]')
                 util.substitute_lines_in_file(self.__generate_write_bank_data(), dst, '// [WriteBankData]',
@@ -368,18 +370,18 @@ class ParameterGenerator:
 
         def _generate_win32_gui_resource():
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
-            dst = copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
+            dst = wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             if not self.generateGuiResource:
                 return
             if dst:
                 util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
 
             target = 'WwisePlugin/ProjectName.rc'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
 
             target = 'WwisePlugin/resource.h'
-            if dst := copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
                 util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
 
         _generate_params_h()
@@ -395,13 +397,13 @@ class ParameterGenerator:
         for i, param in enumerate(self.parameters.values()):
             lines.append(param.generate_param_id())
         lines.append(f'static constexpr AkUInt32 NUM_PARAMS = {len(self.parameters)};')
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_inner_types(self):
         lines = []
         for i, inner_type in enumerate(self.innerTypes.values()):
             lines.append(inner_type.generate_struct_defines())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __load_with_template(self, instance, templates):
         template = copy.deepcopy(templates[instance['template']])
@@ -438,64 +440,64 @@ class ParameterGenerator:
                 lines.append(param.generate_declaration())
         # remove duplicate lines(when inner type is used)
         lines = list(OrderedDict.fromkeys(lines).keys())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_init(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_init())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_read_bank_data(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_read_bank_data())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_set_parameter(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_set_parameter())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_property_name_declaration(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_property_name_declaration())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_property_name_definition(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_property_name_definition())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_write_bank_data(self):
         lines = []
         for param in self.parameters.values():
             lines.append(param.generate_write_bank_data())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_xml_properties(self):
         lines = []
         for param in self.parameters.values():
-            lines.extend(add_indent(param.generate_xml_property(), 2))
-        return auto_add_line_end(lines)
+            lines.extend(wpe_util.add_indent(param.generate_xml_property(), 2))
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_xml_plugin_info(self):
-        return auto_add_line_end(self.pluginInfo.generate_plugin_info())
+        return wpe_util.auto_add_line_end(self.pluginInfo.generate_plugin_info())
 
     def __generate_win32_controls(self):
         lines = []
         for param in self.parameters.values():
             lines.extend(param.generate_win32_controls())
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_win32_idc(self):
         lines = []
         for i, param in enumerate(self.parameters.values()):
             lines.append(f'#define IDC_{param.propertyName} {i + 1001}')
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
 
     def __generate_win32_property_table(self):
         lines = []
@@ -503,4 +505,4 @@ class ParameterGenerator:
             if param.type_ != 'bool':
                 continue
             lines.append(f'AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})')
-        return auto_add_line_end(lines)
+        return wpe_util.auto_add_line_end(lines)
