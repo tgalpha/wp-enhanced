@@ -41,8 +41,8 @@ class Session:
         self.pathMan = PathMan(self.args.root)
         self.projConfig = ProjectConfig(self.pathMan)
         self.targetPlatforms = self.projConfig.target_platforms()
-        if self.args.platforms:
-            self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform in self.args.platforms]
+        if platforms := getattr(self.args, 'platforms', []):
+            self.targetPlatforms = [plt for plt in self.targetPlatforms if plt.platform in platforms]
         HookProcessor().lazy_init(self.args)
 
 
