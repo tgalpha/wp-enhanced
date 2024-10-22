@@ -279,7 +279,7 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )
 
-    subparsers = parser.add_subparsers(title='subcommands', dest='subcommand')
+    subparsers = parser.add_subparsers(title='subcommands')
     add_deploy_parser(subparsers)
     add_clean_parser(subparsers)
     add_build_agent_parser(subparsers)
@@ -327,7 +327,10 @@ Hooks should:
         help='Project root path. Default value is current working directory.'
     )
 
-    parsed_args = parser.parse_args()
+    parsed_args, remains = parser.parse_known_args()
+    # parse global args (withHooks, root)
+    seconds_args = parser.parse_args(remains)
+    parsed_args.__dict__.update(seconds_args.__dict__)
     parsed_args.func(parsed_args)
 
 
