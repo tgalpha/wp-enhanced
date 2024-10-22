@@ -11,13 +11,11 @@ class HookProcessor:
     def __init__(self):
         self.pathMan = None
         self.args = None
-        self.buildConfig = None
         self.targetHooks = None
 
-    def init(self, path_man: PathMan, args):
-        self.pathMan = path_man
+    def lazy_init(self, args):
+        self.pathMan = PathMan(cwd=args.root)
         self.args = args
-        self.buildConfig = args.configuration
         self.targetHooks = args.withHooks
 
     def register(self, command):
@@ -26,6 +24,7 @@ class HookProcessor:
         """
         def decorator(func):
             def wrapper(*args, **kwargs):
+                self.lazy_init(args[0])
                 self.process_pre_hook(command)
                 res = func(*args, **kwargs)
                 self.process_post_hook(command)
@@ -51,7 +50,6 @@ class HookProcessor:
         hook_module = util.safe_import_module(hook_name, self.pathMan.hooksDir)
         logging.info(f'Running hook: {hook_name}')
         hook_module.main(proj_root=self.pathMan.root,
-                         build_config=self.buildConfig,
                          plugin_name=self.pathMan.pluginName,
                          **self.args.__dict__
                          )

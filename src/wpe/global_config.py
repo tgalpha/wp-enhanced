@@ -20,6 +20,7 @@ class GlobalConfig:
         self.configFile = osp.join(util.get_platform_appdata_dir(), 'wpe', 'config.toml')
         # Loaded as a flat dict
         self._configDict = copy.deepcopy(self._DEFAULT_CONFIG)
+        self.load()
 
     def handle_command(self, args):
         if args.list:

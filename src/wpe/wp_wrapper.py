@@ -51,6 +51,7 @@ class WpWrapper:
             'package',
             'premake',
         )
+        self.validate_env()
 
     def _load_wwise_version(self) -> str:
         install_entry = util.load_json(osp.join(self.wwiseRoot, 'install-entry.json'))

@@ -15,6 +15,32 @@ import toml
 from wpe.pathman import PathMan
 
 
+class ParserHelp:
+    def __init__(self, name, parser):
+        self.name = name
+        self.parser = parser
+        self.aliases = []
+
+    def add_alias(self, alias):
+        self.aliases.append(alias)
+
+    def format_help(self, indent=4):
+        name_with_aliases = f'{self.name} ({", ".join(self.aliases)})' if self.aliases else self.name
+        return f'''{" "*indent}{name_with_aliases}: {self.parser.description}
+    {" "*indent}{self.parser.format_usage()}'''
+
+
+def generate_integrated_description(parser, subparsers):
+    processed_parsers = {}
+    for name, subparser in subparsers.choices.items():
+        if subparser.prog in processed_parsers:
+            processed_parsers[subparser.prog].add_alias(name)
+            continue
+        parser_help = ParserHelp(name, subparser)
+        processed_parsers[subparser.prog] = parser_help
+    parser.description = "\n\n".join((h.format_help() for h in processed_parsers.values()))
+
+
 def overwrite_copy(src: str, dst: str):
     if osp.isfile(src):
         copy_file(src, dst)
