@@ -90,7 +90,7 @@ def add_build_agent_parser(subparsers):
         default=5000,
         help='Port to run the build agent on.'
     )
-    subparser.set_defaults(func=core.build)
+    subparser.set_defaults(func=core.start_build_agent)
 
 
 def add_config_parser(subparsers):
