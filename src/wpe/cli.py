@@ -260,6 +260,16 @@ def add_rename_parser(subparsers):
         aliases=['r'],
         description='Rename plugin.'
     )
+    subparser.add_argument(
+        '-n'
+        '--new-name',
+        action='store',
+        type=str,
+        dest='newName',
+        default='',
+        required=False,
+        help='New plugin name.'
+    )
     subparser.set_defaults(func=core.rename)
 
 
@@ -272,7 +282,7 @@ def add_jetbrains_run_config_parser(subparsers):
     subparser.set_defaults(func=core.add_jetbrains_run_config)
 
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(
         prog='wpe',
         epilog='Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.',
@@ -280,10 +290,6 @@ def main():
     )
 
     subparsers = parser.add_subparsers(title='subcommands')
-    add_deploy_parser(subparsers)
-    add_clean_parser(subparsers)
-    add_build_agent_parser(subparsers)
-    add_config_parser(subparsers)
     add_wp_parser(subparsers)
     add_new_parser(subparsers)
     add_init_wpe_parser(subparsers)
@@ -295,6 +301,10 @@ def main():
     add_full_pack_parser(subparsers)
     add_bump_parser(subparsers)
     add_rename_parser(subparsers)
+    add_deploy_parser(subparsers)
+    add_clean_parser(subparsers)
+    add_build_agent_parser(subparsers)
+    add_config_parser(subparsers)
     add_jetbrains_run_config_parser(subparsers)
 
     generate_integrated_description(parser, subparsers)
@@ -327,7 +337,7 @@ Hooks should:
         help='Project root path. Default value is current working directory.'
     )
 
-    parsed_args, remains = parser.parse_known_args()
+    parsed_args, remains = parser.parse_known_args(args)
     # parse global args (withHooks, root)
     seconds_args = parser.parse_args(remains)
     parsed_args.__dict__.update(seconds_args.__dict__)

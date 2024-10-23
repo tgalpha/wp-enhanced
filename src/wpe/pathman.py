@@ -5,6 +5,9 @@ import re
 import kkpyutil as util
 
 
+from wpe.wp_wrapper import WpWrapper
+
+
 class PathMan:
     def __init__(self, cwd=None):
         self.templatesDir = osp.join(osp.dirname(__file__), 'templates')

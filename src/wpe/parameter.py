@@ -369,6 +369,8 @@ class ParameterGenerator:
                 param.dump_parameter_doc(self.pathMan.docsDir)
 
         def _generate_win32_gui_resource():
+            target = 'WwisePlugin/Win32/ProjectNamePluginGUI.h'
+            dst = wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
             dst = wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             if not self.generateGuiResource:
@@ -377,11 +379,11 @@ class ParameterGenerator:
                 util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
 
             target = 'WwisePlugin/ProjectName.rc'
-            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, lazy_create=True):
                 util.substitute_lines_in_file(self.__generate_win32_controls(), dst, '// [Controls]', '// [/Controls]')
 
             target = 'WwisePlugin/resource.h'
-            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix):
+            if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, lazy_create=True):
                 util.substitute_lines_in_file(self.__generate_win32_idc(), dst, '// [IDC]', '// [/IDC]')
 
         _generate_params_h()

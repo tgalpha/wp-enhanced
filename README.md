@@ -20,10 +20,10 @@ Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.
     ```
 
 # Create new plugin project
-Run `wpe -n` to create new project like original wp.py, but with some additional features.
+Run `wpe new` to create new project like original wp.py, but with some additional features.
 
 ## Parameters code generation
-You can define parameters in `$PROJECT_ROOT/.wpe/wpe_project.toml` and generate code for them by running `wpe -gp`.
+You can define parameters in `$PROJECT_ROOT/.wpe/wpe_project.toml` and generate code for them by running `wpe gp`.
 
 Be careful the followed files will be **overwritten** by template if `[wp-enhanced template]` is not found in file:
  - [ProjectNameFXParams.cpp](src%2Fwpe%2Ftemplates%2FSoundEnginePlugin%2FProjectNameFXParams.cpp)
@@ -45,4 +45,4 @@ A default `post_build.py` is created when creating new project, which will copy 
 For more information about hooks, please refer to description of `-H, --with-hooks` in `wpe -h`
 
 # Add wpe to existing project
-Run `wpe -i` under project root.
+Run `wpe i` under project root.

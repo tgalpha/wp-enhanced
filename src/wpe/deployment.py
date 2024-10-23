@@ -7,6 +7,7 @@ import tarfile
 import lzma
 
 from wpe.pathman import PathMan
+import wpe.util as wpe_util
 
 
 class _Package:
@@ -74,11 +75,11 @@ class Deployment:
     def clean(self):
         name = self.args.name or PathMan().pluginName
         print(f"Cleaning {name}...")
-        fs = glob.glob(rf'{self.pluginDeployDir}\**\*{name}*',
+        paths = glob.glob(rf'{self.pluginDeployDir}\**\*{name}*',
                        recursive=True)
-        for f in fs:
-            print(f'Removing {f}')
-            os.remove(f)
+        for p in paths:
+            print(f'Removing {p}')
+            wpe_util.remove_path(p)
 
     def _lazy_find_archive(self):
         if osp.isfile(self.args.archive):

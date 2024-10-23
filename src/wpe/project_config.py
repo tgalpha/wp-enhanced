@@ -92,7 +92,7 @@ class ProjectConfig:
         platform_targets_key = 'win_targets' if platform.system() == 'Windows' else 'mac_targets'
         return [PlatformTarget(target) for target in self.config['project'][platform_targets_key]]
 
-    def all_platforms(self) -> list[str]:
+    def all_platform_names(self) -> list[str]:
         return list(set([PlatformTarget(target).platform for target in self.config['project']['win_targets'] + self.config['project']['mac_targets']]))
 
     def plugin_info(self) -> PluginInfo:

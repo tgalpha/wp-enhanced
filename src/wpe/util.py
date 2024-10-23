@@ -41,7 +41,7 @@ def generate_integrated_description(parser, subparsers):
     parser.description = "\n\n".join((h.format_help() for h in processed_parsers.values()))
 
 
-def overwrite_copy(src: str, dst: str):
+def overwrite_copy(src, dst):
     if osp.isfile(src):
         copy_file(src, dst)
 
@@ -119,34 +119,33 @@ def add_indent(lines: list[str], indent: int):
     return [f'{" " * indent}{line}' for line in lines]
 
 
-def copy_template(relative, pathman: PathMan, is_forced=False, lib_suffix='', add_suffix_after_project_name=False):
+def copy_template(relative, pathman: PathMan, is_forced=False, lib_suffix='', add_suffix_after_project_name=False, lazy_create=False):
     def _need_overwrite(_dst):
-        if is_forced:
+        if is_forced or not osp.isfile(_dst):
             return True
         content = util.load_text(_dst)
         return '[wp-enhanced template]' not in content
 
     src = osp.join(pathman.templatesDir, relative)
+    assert osp.isfile(src)
     dst = replace_in_basename(osp.join(pathman.root, relative), 'ProjectName',
                               pathman.pluginName + lib_suffix if add_suffix_after_project_name else pathman.pluginName)
-    if not osp.isfile(dst):
+    if not osp.isfile(dst) and not lazy_create:
         logging.info(f'Destination file "{osp.basename(dst)}" does not exist. Skipping...')
         return None
+
     if not _need_overwrite(dst):
         logging.info(f'Skip copying template "{osp.basename(src)}". Use -f to force overwrite.')
         return dst
-    if osp.isfile(src):
-        overwrite_copy(src, dst)
-        util.substitute_keywords_in_file(dst,
-                                         {
-                                             'name': pathman.pluginName,
-                                             'display_name': pathman.pluginName,
-                                             'plugin_id': pathman.pluginId,
-                                             'suffix': lib_suffix,
-                                         })
-        return dst
-    else:
-        raise FileNotFoundError(f'File not found: {src}')
+    overwrite_copy(src, dst)
+    util.substitute_keywords_in_file(dst,
+                                     {
+                                         'name': pathman.pluginName,
+                                         'display_name': pathman.pluginName,
+                                         'plugin_id': pathman.pluginId,
+                                         'suffix': lib_suffix,
+                                     })
+    return dst
 
 
 def parse_premake_lua_table(premake_plugin_lua_path):

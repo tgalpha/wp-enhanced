@@ -9,7 +9,7 @@ from wpe.pathman import PathMan
 from wpe.util import overwrite_copy, remove_ansi_color, parse_premake_lua_table
 
 
-class TestRunner:
+class PluginTestRunner:
     def __init__(self, path_man: PathMan):
         self.pathMan = path_man
 
@@ -83,7 +83,7 @@ class TestRunner:
         raise NotImplementedError('subclass it')
 
 
-class _WindowsTestRunner(TestRunner):
+class _WindowsTestRunner(PluginTestRunner):
     def _build_test_project(self):
         super()._build_test_project()
         util.run_cmd(
