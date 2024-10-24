@@ -49,8 +49,8 @@ def build_ios_plugin(plugin_name: str):
     local_branch_name = get_local_branch_name()
     rpc_call('git_sync', {'root': _proj_root_on_build_agent, 'branch': local_branch_name})
     rpc_call('premake', {'root': _proj_root_on_build_agent, 'platform': 'iOS'})
-    for build_config in ('Debug', 'Profile', 'Release'):
-        rpc_call('build', {'root': _proj_root_on_build_agent, 'platform': 'iOS', 'build_config': build_config})
+    for configuration in ('Debug', 'Profile', 'Release'):
+        rpc_call('build', {'root': _proj_root_on_build_agent, 'platform': 'iOS', 'configuration': configuration})
 
 
 def copy_binaries_from_build_machine(plugin_name: str):

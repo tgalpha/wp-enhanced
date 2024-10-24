@@ -84,8 +84,8 @@ class BuildAgent:
     def build(self):
         data = request.get_json()
         root = data.get('root')
-        build_config = data.get('build_config')
+        configuration = data.get('configuration')
         platform = data.get('platform')
-        result = self.run_command(f'wpe b -r {root} -c {build_config} -plt {platform}')
+        result = self.run_command(f'wpe b -r {root} -c {configuration} -plt {platform}')
         retcode = 200 if result.succeeded else 500
         return jsonify(result.to_json()), retcode

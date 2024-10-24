@@ -322,7 +322,6 @@ Hooks should:
   - supported commands: `premake`, `generate_parameters`, `build`, `pack`
 - define a function with name `main`, accept followed arguments (or use `**kwargs`):
   - proj_root: project root path
-  - build_config: build configuration (Debug, Profile, Release)
   - plugin_name: plugin name, which is used to glob plugin files'''
     )
 
