@@ -6,7 +6,6 @@ win_targets = [
     { platform = 'Android', architectures = ['arm64-v8a', 'armeabi-v7a'] },
 ]
 mac_targets = [
-    { platform = 'Authoring', architectures = ['universal'] },
     { platform = 'iOS', architectures = ['iOS'] },
 ]
 

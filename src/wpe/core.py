@@ -56,16 +56,9 @@ def wp(args):
 
 
 def new(args):
-    session = Session.get(args, load_configs=False)
     logging.info('Create new project')
     WpWrapper().new()
     init_wpe(args)
-    session.load_configs()
-    args.force = False
-    args.gui = False
-    generate_parameters(args)
-    premake(args)
-    logging.info('Next step: implement your plugin, build with hooks by command: wpe -b -H')
 
 
 def init_wpe(args):

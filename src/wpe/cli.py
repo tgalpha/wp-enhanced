@@ -52,7 +52,7 @@ def add_clean_parser(subparsers):
     subparser = subparsers.add_parser(
         'clean',
         aliases=['c'],
-        description='Clean deployed plugin in game project.'
+        description='Clean deployed plugin in game project. !!Simply delete by filename, not recommended for production use!!'
     )
     subparser.add_argument(
         '-n',
@@ -184,7 +184,7 @@ def add_generate_parameters_parser(subparsers):
         dest='force',
         required=False,
         default=False,
-        help='Force operation. This argument is compatible with -gp, will overwrite existing source files.'
+        help='Force overwrite existing source files.'
     )
     subparser.add_argument(
         '-g',
@@ -193,7 +193,7 @@ def add_generate_parameters_parser(subparsers):
         dest='gui',
         required=False,
         default=False,
-        help='Effective when -gp is specified. Generate GUI resources.'
+        help='Generate GUI resources.'
     )
     subparser.set_defaults(func=core.generate_parameters)
 
