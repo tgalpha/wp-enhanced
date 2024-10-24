@@ -10,7 +10,8 @@ Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.
     - Windows:
         - Set from Wwise Launcher
     
-        ![image](https://user-images.githubusercontent.com/61353126/228009337-742b294a-a453-4134-9b3d-ed7c09f13049.png)
+        ![image](https://github.com/user-attachments/assets/624e498d-1f86-4839-9469-a7106e60a6fc)
+
     - MacOS:
         - Set `WWISEROOT` and `WWISESDK` manually
     
@@ -136,7 +137,7 @@ Some default are created when creating new project, you can modify them or add n
 
 For more information about hooks, please refer to description of `-H, --with-hooks` in `wpe -h`
 
-# Add wpe to existing project
-If your have existing project, you can integrate wpe to it by running `wpe init` in your project root.
+# Integrate wpe to existing project
+If your have existing project, you can integrate wpe to it by running `wpe i` in your project root.
 
-**CAUTION ❗❗**: Make sure to stage your modified files before running `wpe init`, as the parameters code generation may overwrite your files.
+**CAUTION ❗❗**: Make sure to stage your modified files before running `wpe i`, as the parameters code generation may overwrite your files.
