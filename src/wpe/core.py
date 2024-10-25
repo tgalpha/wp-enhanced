@@ -166,7 +166,7 @@ def full_pack(args):
             build_args[2] = build_config
             WpWrapper().build(*build_args)
     hook_processor.process_post_hook('build')
-    pack()
+    pack(args)
 
 
 @HookProcessor().register('bump')
