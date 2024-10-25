@@ -47,7 +47,7 @@ class Deployment:
     @staticmethod
     def create(args):
         if osp.isfile(osp.join(args.destProject, 'Authoring', 'x64', 'Release', 'bin', 'Wwise.exe')):
-            print('Target: UE project detected.')
+            print('Target: Wwise Authoring detected.')
             return AuthoringDeployment(args)
         if glob.glob(osp.join(args.destProject, '*.uproject')):
             print('Target: UE project detected.')
