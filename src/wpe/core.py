@@ -153,7 +153,8 @@ def pack(args):
 def full_pack(args):
     session = Session.get(args)
     hook_processor = HookProcessor()
-    hook_processor.buildConfig = 'Release'
+    args.configuration = 'Release'
+    args.platforms = session.projConfig.all_platform_names()
     hook_processor.process_pre_hook('build')
     for plt in session.targetPlatforms:
         build_args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
