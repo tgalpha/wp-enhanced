@@ -30,6 +30,7 @@ wpe = "wpe.cli:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+twine = "^5.1.1"
 
 
 [tool.pytest.ini_options]

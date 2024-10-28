@@ -6,6 +6,11 @@ pushd .
 cd /d %~dp0..
 
 poetry build
-poetry publish
+
+for /F "tokens=*" %%i in ('poetry version -s') do poetry run twine check --strict dist\wp_enhanced-%%i*
+
+if %errorlevel% == 0 (
+    poetry publish
+)
 
 popd
