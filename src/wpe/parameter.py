@@ -125,6 +125,9 @@ class Parameter:
             userInterface=dict_define.get('user_interface', '')
         )
 
+    def has_value_range(self) -> bool:
+        return self.type_ != 'bool' and (self.minValue is not None or self.maxValue is not None)
+
     def generate_param_id(self) -> str:
         return f'static constexpr AkPluginParamID {self.paramIDName} = {self.id};'
 
@@ -146,6 +149,22 @@ class Parameter:
         {self.nameSpace}.{self.cppVariableName} = {interpret_pointer};
         m_paramChangeHandler.SetParamChange({self.paramIDName});
         break;'''
+
+    def generate_validate_parameter(self) -> str:
+        if not self.has_value_range():
+            return ''
+        variable_name = f'{self.nameSpace}.{self.cppVariableName}'
+        conditions = []
+        if self.minValue is not None:
+            conditions.append(f'{variable_name} < {self.minValue}')
+        if self.maxValue is not None:
+            conditions.append(f'{variable_name} > {self.maxValue}')
+        return f'''    if ({" || ".join(conditions)})
+        return false;'''
+
+    def generate_format_parameter(self) -> str:
+        variable_name = f'{self.nameSpace}.{self.cppVariableName}'
+        return f'    oss << "{variable_name} = " << {variable_name} << std::endl;'
 
     def generate_property_name_declaration(self) -> str:
         return f'extern const char* const sz{self.propertyName};'
@@ -340,8 +359,12 @@ class ParameterGenerator:
                                               '// [/ParameterInitialization]')
                 util.substitute_lines_in_file(self.__generate_read_bank_data(), dst, '// [ReadBankData]',
                                               '// [/ReadBankData]')
-                util.substitute_lines_in_file(self.__generate_set_parameter(), dst, '// [SetParameters]',
+                util.substitute_lines_in_file(self.__generate_set_parameters(), dst, '// [SetParameters]',
                                               '// [/SetParameters]', withindent=False)
+                util.substitute_lines_in_file(self.__generate_validate_parameters(), dst, '// [ValidateParameters]',
+                                              '// [/ValidateParameters]', withindent=False)
+                util.substitute_lines_in_file(self.__generate_format_parameters(), dst, '// [FormatParameters]',
+                                              '// [/FormatParameters]', withindent=False)
 
         def _generate_wwise_plugin_h():
             target = 'WwisePlugin/ProjectNamePlugin.h'
@@ -445,39 +468,35 @@ class ParameterGenerator:
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_init(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_init())
+        lines = [param.generate_init() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_read_bank_data(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_read_bank_data())
+        lines = [param.generate_read_bank_data() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
-    def __generate_set_parameter(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_set_parameter())
+    def __generate_set_parameters(self):
+        lines = [param.generate_set_parameter() for param in self.parameters.values()]
+        return wpe_util.auto_add_line_end(lines)
+
+    def __generate_validate_parameters(self):
+        lines = [param.generate_validate_parameter() for param in self.parameters.values() if param.has_value_range()]
+        return wpe_util.auto_add_line_end(lines)
+
+    def __generate_format_parameters(self):
+        lines = [param.generate_format_parameter() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_property_name_declaration(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_property_name_declaration())
+        lines = [param.generate_property_name_declaration() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_property_name_definition(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_property_name_definition())
+        lines = [param.generate_property_name_definition() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_write_bank_data(self):
-        lines = []
-        for param in self.parameters.values():
-            lines.append(param.generate_write_bank_data())
+        lines = [param.generate_write_bank_data() for param in self.parameters.values()]
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_xml_properties(self):
@@ -502,9 +521,6 @@ class ParameterGenerator:
         return wpe_util.auto_add_line_end(lines)
 
     def __generate_win32_property_table(self):
-        lines = []
-        for param in self.parameters.values():
-            if param.type_ != 'bool':
-                continue
-            lines.append(f'AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})')
+        lines = [f'AK_WWISE_PLUGIN_GUI_WINDOWS_POP_ITEM(IDC_{param.propertyName}, sz{param.propertyName})' for param in
+                 self.parameters.values() if param.type_ == 'bool']
         return wpe_util.auto_add_line_end(lines)

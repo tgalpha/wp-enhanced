@@ -23,25 +23,46 @@ the specific language governing permissions and limitations under the License.
 
   Copyright (c) 2021 Audiokinetic Inc.
 *******************************************************************************/
+// [wp-enhanced template] **Do not delete this line**
 
 #ifndef TestPluginFXParams_H
 #define TestPluginFXParams_H
 
 #include <AK/SoundEngine/Common/IAkPlugin.h>
 #include <AK/Plugin/PluginServices/AkFXParameterChangeHandler.h>
+#include <string>
 
 // Add parameters IDs here, those IDs should map to the AudioEnginePropertyID
 // attributes in the xml property definition.
-static const AkPluginParamID PARAM_PLACEHOLDER_ID = 0;
-static const AkUInt32 NUM_PARAMS = 1;
+// [ParameterID]
+static constexpr AkPluginParamID PARAM_BOOL_PARAM_AS_CHECKBOX_ID = 0;
+static constexpr AkPluginParamID PARAM_INT_PARAM_AS_COMBO_BOX_ID = 1;
+static constexpr AkPluginParamID PARAM_FLOAT_PARAM_AS_SLIDER_ID = 2;
+static constexpr AkUInt32 NUM_PARAMS = 3;
+// [/ParameterID]
+
+// [InnerTypes]
+// [/InnerTypes]
+
+struct TestPluginInnerTypeParams
+{
+    // [InnerTypeDeclaration]
+    // [/InnerTypeDeclaration]
+};
 
 struct TestPluginRTPCParams
 {
-    AkReal32 fPlaceholder;
+    // [RTPCDeclaration]
+    AkInt32 iIntParamAsComboBox;
+    AkReal32 fFloatParamAsSlider;
+    // [/RTPCDeclaration]
 };
 
 struct TestPluginNonRTPCParams
 {
+    // [NonRTPCDeclaration]
+    bool bBoolParamAsCheckbox;
+    // [/NonRTPCDeclaration]
 };
 
 struct TestPluginFXParams
@@ -68,10 +89,20 @@ struct TestPluginFXParams
     /// Update a single parameter at a time and perform the necessary actions on the parameter changes.
     AKRESULT SetParam(AkPluginParamID in_paramID, const void* in_pValue, AkUInt32 in_ulParamSize) override;
 
-    AK::AkFXParameterChangeHandler<NUM_PARAMS> m_paramChangeHandler;
+    AK::AkFXParameterChangeHandler<NUM_PARAMS>* GetParamChangeHandler() { return &m_paramChangeHandler; }
 
+    /// Check if the parameter value is in range.
+    bool ValidateParams();
+
+    /// Format the parameter values as a string for display.
+    std::string FormatParams();
+
+    TestPluginInnerTypeParams InnerType;
     TestPluginRTPCParams RTPC;
     TestPluginNonRTPCParams NonRTPC;
+
+private:
+    AK::AkFXParameterChangeHandler<NUM_PARAMS> m_paramChangeHandler;
 };
 
 #endif // TestPluginFXParams_H

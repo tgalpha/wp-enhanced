@@ -30,6 +30,7 @@ the specific language governing permissions and limitations under the License.
 
 #include <AK/SoundEngine/Common/IAkPlugin.h>
 #include <AK/Plugin/PluginServices/AkFXParameterChangeHandler.h>
+#include <string>
 
 // Add parameters IDs here, those IDs should map to the AudioEnginePropertyID
 // attributes in the xml property definition.
@@ -89,6 +90,12 @@ struct TestPluginFXParams
     AKRESULT SetParam(AkPluginParamID in_paramID, const void* in_pValue, AkUInt32 in_ulParamSize) override;
 
     AK::AkFXParameterChangeHandler<NUM_PARAMS>* GetParamChangeHandler() { return &m_paramChangeHandler; }
+
+    /// Check if the parameter value is in range.
+    bool ValidateParams();
+
+    /// Format the parameter values as a string for display.
+    std::string FormatParams();
 
     TestPluginInnerTypeParams InnerType;
     TestPluginRTPCParams RTPC;

@@ -104,7 +104,7 @@ def test_generate_parameters(args, tmp_path):
         relpath = osp.relpath(expected, expected_dir)
         actually = osp.join(pathman.root, relpath)
         assert osp.isfile(actually)
-        assert util.compare_textfiles(actually, expected)
+        assert util.load_text(actually) == util.load_text(expected)
 
 
 def test_build_pack_and_clean(args, tmp_path):

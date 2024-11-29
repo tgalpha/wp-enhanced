@@ -28,6 +28,7 @@ the specific language governing permissions and limitations under the License.
 #include "TestPluginFXParams.h"
 
 #include <AK/Tools/Common/AkBankReadHelpers.h>
+#include <sstream>
 
 TestPluginFXParams::TestPluginFXParams()
 {
@@ -117,4 +118,24 @@ AKRESULT TestPluginFXParams::SetParam(AkPluginParamID in_paramID, const void* in
     }
 
     return eResult;
+}
+
+bool TestPluginFXParams::ValidateParams()
+{
+    // [ValidateParameters]
+    if (RTPC.fFloatParamAsSlider < -96 || RTPC.fFloatParamAsSlider > 24)
+        return false;
+    // [/ValidateParameters]
+    return true;
+}
+
+std::string TestPluginFXParams::FormatParams()
+{
+    std::ostringstream oss;
+    // [FormatParameters]
+    oss << "NonRTPC.bBoolParamAsCheckbox = " << NonRTPC.bBoolParamAsCheckbox << std::endl;
+    oss << "RTPC.iIntParamAsComboBox = " << RTPC.iIntParamAsComboBox << std::endl;
+    oss << "RTPC.fFloatParamAsSlider = " << RTPC.fFloatParamAsSlider << std::endl;
+    // [/FormatParameters]
+    return oss.str();
 }

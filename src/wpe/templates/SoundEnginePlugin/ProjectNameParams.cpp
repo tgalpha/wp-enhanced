@@ -28,6 +28,7 @@ the specific language governing permissions and limitations under the License.
 #include "%(name)s%(suffix)sParams.h"
 
 #include <AK/Tools/Common/AkBankReadHelpers.h>
+#include <sstream>
 
 %(name)s%(suffix)sParams::%(name)s%(suffix)sParams()
 {
@@ -105,4 +106,19 @@ AKRESULT %(name)s%(suffix)sParams::SetParam(AkPluginParamID in_paramID, const vo
     }
 
     return eResult;
+}
+
+bool %(name)s%(suffix)sParams::ValidateParams()
+{
+    // [ValidateParameters]
+    // [/ValidateParameters]
+    return true;
+}
+
+std::string %(name)s%(suffix)sParams::FormatParams()
+{
+    std::ostringstream oss;
+    // [FormatParameters]
+    // [/FormatParameters]
+    return oss.str();
 }

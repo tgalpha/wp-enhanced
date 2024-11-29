@@ -23,10 +23,12 @@ the specific language governing permissions and limitations under the License.
 
   Copyright (c) 2021 Audiokinetic Inc.
 *******************************************************************************/
+// [wp-enhanced template] **Do not delete this line**
 
 #include "TestPluginFXParams.h"
 
 #include <AK/Tools/Common/AkBankReadHelpers.h>
+#include <sstream>
 
 TestPluginFXParams::TestPluginFXParams()
 {
@@ -38,6 +40,7 @@ TestPluginFXParams::~TestPluginFXParams()
 
 TestPluginFXParams::TestPluginFXParams(const TestPluginFXParams& in_rParams)
 {
+    InnerType = in_rParams.InnerType;
     RTPC = in_rParams.RTPC;
     NonRTPC = in_rParams.NonRTPC;
     m_paramChangeHandler.SetAllParamChanges();
@@ -53,7 +56,11 @@ AKRESULT TestPluginFXParams::Init(AK::IAkPluginMemAlloc* in_pAllocator, const vo
     if (in_ulBlockSize == 0)
     {
         // Initialize default parameters here
-        RTPC.fPlaceholder = 0.0f;
+        // [ParameterInitialization]
+        NonRTPC.bBoolParamAsCheckbox = true;
+        RTPC.iIntParamAsComboBox = 0;
+        RTPC.fFloatParamAsSlider = 0;
+        // [/ParameterInitialization]
         m_paramChangeHandler.SetAllParamChanges();
         return AK_Success;
     }
@@ -73,7 +80,11 @@ AKRESULT TestPluginFXParams::SetParamsBlock(const void* in_pParamsBlock, AkUInt3
     AkUInt8* pParamsBlock = (AkUInt8*)in_pParamsBlock;
 
     // Read bank data here
-    RTPC.fPlaceholder = READBANKDATA(AkReal32, pParamsBlock, in_ulBlockSize);
+    // [ReadBankData]
+    NonRTPC.bBoolParamAsCheckbox = READBANKDATA(bool, pParamsBlock, in_ulBlockSize);
+    RTPC.iIntParamAsComboBox = READBANKDATA(AkInt32, pParamsBlock, in_ulBlockSize);
+    RTPC.fFloatParamAsSlider = READBANKDATA(AkReal32, pParamsBlock, in_ulBlockSize);
+    // [/ReadBankData]
     CHECKBANKDATASIZE(in_ulBlockSize, eResult);
     m_paramChangeHandler.SetAllParamChanges();
 
@@ -87,14 +98,44 @@ AKRESULT TestPluginFXParams::SetParam(AkPluginParamID in_paramID, const void* in
     // Handle parameter change here
     switch (in_paramID)
     {
-    case PARAM_PLACEHOLDER_ID:
-        RTPC.fPlaceholder = *((AkReal32*)in_pValue);
-        m_paramChangeHandler.SetParamChange(PARAM_PLACEHOLDER_ID);
+    // [SetParameters]
+    case PARAM_BOOL_PARAM_AS_CHECKBOX_ID:
+        NonRTPC.bBoolParamAsCheckbox = *((bool*)in_pValue);
+        m_paramChangeHandler.SetParamChange(PARAM_BOOL_PARAM_AS_CHECKBOX_ID);
         break;
+    case PARAM_INT_PARAM_AS_COMBO_BOX_ID:
+        RTPC.iIntParamAsComboBox = static_cast<AkInt32>(*(AkReal32*)in_pValue);
+        m_paramChangeHandler.SetParamChange(PARAM_INT_PARAM_AS_COMBO_BOX_ID);
+        break;
+    case PARAM_FLOAT_PARAM_AS_SLIDER_ID:
+        RTPC.fFloatParamAsSlider = *((AkReal32*)in_pValue);
+        m_paramChangeHandler.SetParamChange(PARAM_FLOAT_PARAM_AS_SLIDER_ID);
+        break;
+    // [/SetParameters]
     default:
         eResult = AK_InvalidParameter;
         break;
     }
 
     return eResult;
+}
+
+bool TestPluginFXParams::ValidateParams()
+{
+    // [ValidateParameters]
+    if (RTPC.fFloatParamAsSlider < -96 || RTPC.fFloatParamAsSlider > 24)
+        return false;
+    // [/ValidateParameters]
+    return true;
+}
+
+std::string TestPluginFXParams::FormatParams()
+{
+    std::ostringstream oss;
+    // [FormatParameters]
+    oss << "NonRTPC.bBoolParamAsCheckbox = " << NonRTPC.bBoolParamAsCheckbox << std::endl;
+    oss << "RTPC.iIntParamAsComboBox = " << RTPC.iIntParamAsComboBox << std::endl;
+    oss << "RTPC.fFloatParamAsSlider = " << RTPC.fFloatParamAsSlider << std::endl;
+    // [/FormatParameters]
+    return oss.str();
 }
