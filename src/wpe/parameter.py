@@ -212,7 +212,7 @@ class Parameter:
 </Property>'''.splitlines()
 
         def _generate_float_gui_lines():
-            user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMax="{self.maxValue}"'
+            user_interface = self.userInterface or f'Step="0.1" Fine="0.001" Decimals="3" UIMin="{self.minValue}" UIMax="{self.maxValue}"'
             return f'''<Property Name="{self.propertyName}" Type="{self.xmlTypeName}" {support_rtpc_type} {data_meaning} DisplayName="{self.displayName}">
   <UserInterface {user_interface} />
   <DefaultValue>{self.defaultValue}</DefaultValue>
