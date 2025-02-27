@@ -393,13 +393,13 @@ class ParameterGenerator:
 
         def _generate_win32_gui_resource():
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.h'
-            dst = wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
+            wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
             target = 'WwisePlugin/Win32/ProjectNamePluginGUI.cpp'
             dst = wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix)
-            if not self.generateGuiResource:
-                return
             if dst:
                 util.substitute_lines_in_file(self.__generate_win32_property_table(), dst, '// [PropertyTable]', '// [/PropertyTable]')
+            if not self.generateGuiResource:
+                return
 
             target = 'WwisePlugin/ProjectName.rc'
             if dst := wpe_util.copy_template(target, self.pathMan, self.isForced, lib_suffix=self.libSuffix, lazy_create=True):
