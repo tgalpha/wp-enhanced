@@ -42,6 +42,7 @@ class InnerType:
 
     def __post_init__(self):
         self.structName = util.convert_compound_cases(self.name)
+        self.instance_name = util.convert_compound_cases(self.name, 'camel')
 
     @staticmethod
     def create(name, dict_define: dict[str, Any]):
@@ -103,7 +104,7 @@ class Parameter:
         self.xmlTypeName = _xml_type_name_map[self.type_]
         self.struct = 'InnerType' if self.parent else ('RTPC' if self.rtpc_type else 'NonRTPC')
         self.displayName = self.displayName or util.convert_compound_cases(self.name, style='title')
-        self.nameSpace = f'{self.struct}.{self.parent.name}{self.suffix}' if self.parent else self.struct
+        self.nameSpace = f'{self.struct}.{self.parent.instance_name}{self.suffix}' if self.parent else self.struct
 
     def assign_id(self, _id: int):
         self.id = _id
@@ -133,7 +134,7 @@ class Parameter:
 
     def generate_declaration(self) -> str:
         if self.parent:
-            return f'{self.parent.structName} {self.parent.name}{self.suffix};'
+            return f'{self.parent.structName} {self.parent.instance_name}{self.suffix};'
         return f'{self.typeName} {self.cppVariableName};'
 
     def generate_init(self) -> str:
