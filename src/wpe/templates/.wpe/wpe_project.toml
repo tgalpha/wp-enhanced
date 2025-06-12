@@ -10,6 +10,8 @@ mac_targets = [
 ]
 
 [plugin_info]
+# For a metadata plug-in, it is important to set the MenuPath="Metadata" attribute to the PluginInfo node:
+# See `Metadata PluginInfo Element` section in https://www.audiokinetic.com/en/library/?source=SDK&id=plugin_xml.html
 MenuPath = 'custom'
 
 [plugin_info.platform_support.Any]
