@@ -77,10 +77,10 @@ def copy_binaries_from_build_machine(plugin_name: str):
 
 
 def main(**kwargs):
-    # check_worktree_clean()
-    # build_ios_plugin(kwargs['plugin_name'])
-    # copy_binaries_from_build_machine(kwargs['plugin_name'])
-    pass
+    if input('Remote build iOS plugin? [y/n]') == 'y':
+        check_worktree_clean()
+        build_ios_plugin(kwargs['plugin_name'])
+        copy_binaries_from_build_machine(kwargs['plugin_name'])
 
 
 if __name__ == '__main__':
