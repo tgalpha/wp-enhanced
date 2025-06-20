@@ -279,7 +279,8 @@ Range: {self.minValue} - {self.maxValue} <br/>'''
         title = f'LTEXT "{self.displayName}",IDC_STATIC,0,{vertical_pos + 2},48,10'
         control_pos = f'48,{vertical_pos},64,12'
         if self.type_ == 'bool':
-            control = f'CONTROL "{self.propertyName}",IDC_{self.propertyName},"Button",BS_AUTOCHECKBOX | WS_TABSTOP,' + control_pos
+            control = f'CONTROL "{self.propertyName}",IDC_{self.propertyName},"Button",BS_AUTOCHECKBOX | WS_TABSTOP,' + f'0,{vertical_pos},112,12'
+            return [control]
         elif self.type_ == 'int':
             if self.enumeration:
                 options = ', '.join([f'{opt["value"]}:{opt["displayName"]}' for opt in self.enumeration])
