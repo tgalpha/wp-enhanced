@@ -6,9 +6,9 @@ from pprint import pformat
 
 import kkpyutil as util
 
-_build_agent_host = 'YOUR_BUILD_AGENT_HOST_HERE'
-_build_agent_account = 'YOUR_BUILD_AGENT_ACCOUNT_HERE'
-_proj_root_on_build_agent = 'YOUR_PROJECT_ROOT_ON_BUILD_AGENT_HERE'
+_build_agent_host = '' # YOUR_BUILD_AGENT_HOST_HERE
+_build_agent_account = '' # YOUR_BUILD_AGENT_ACCOUNT_HERE
+_proj_root_on_build_agent = '' # YOUR_PROJECT_ROOT_ON_BUILD_AGENT_HERE
 
 
 def rpc_call(method: str, args: dict):
@@ -16,7 +16,7 @@ def rpc_call(method: str, args: dict):
     response = requests.post(f'http://{_build_agent_host}:5000/{method}',
                              json=args)
     response_json = response.json()
-    if response.status_code != 200 or response_json['retcode'] != 0:
+    if response.status_code != 200 or not response_json['succeeded']:
         raise RuntimeError(pformat(response_json, width=160, sort_dicts=False))
     logging.info(pformat(response_json, width=160, sort_dicts=False))
     return response
@@ -77,10 +77,11 @@ def copy_binaries_from_build_machine(plugin_name: str):
 
 
 def main(**kwargs):
-    if input('Remote build iOS plugin? [y/n]') == 'y':
-        check_worktree_clean()
-        build_ios_plugin(kwargs['plugin_name'])
-        copy_binaries_from_build_machine(kwargs['plugin_name'])
+    if _build_agent_host and _build_agent_account and _proj_root_on_build_agent:
+        if input('Remote build iOS plugin? [y/n]') == 'y':
+            check_worktree_clean()
+            build_ios_plugin(kwargs['plugin_name'])
+            copy_binaries_from_build_machine(kwargs['plugin_name'])
 
 
 if __name__ == '__main__':
