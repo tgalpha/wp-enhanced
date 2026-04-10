@@ -142,6 +142,7 @@ Default parameter examples for new projects:
 | Full pack | `wpe FP` | Build (including Release-style full pack flow) then pack for distribution |
 | Deploy | `wpe d` | Deploy a packaged archive (see below) |
 | Build agent | `wpe ba` | HTTP service on a **build machine** for remote `premake` / `build` (see below) |
+| Run hook | `wpe rh` | Run one `.wpe/hooks/<name>.py` with the same kwargs as automatic hooks (see [Hooks](#hooks)) |
 
 ### Deploy
 
@@ -194,6 +195,13 @@ Each script should define `main(**kwargs)`. wp-enhanced passes at least:
 - `plugin_name` — plug-in name  
 
 Additional keys depend on the command (e.g. build passes `platforms`, `configuration`).
+
+**Run a hook without running the parent command:** use `wpe run-hook` (alias `wpe rh`) with the hook module name (e.g. `pre_premake`, `post_build`, or `pre_premake.py`). Loads `wpe_project.toml` and passes `proj_root`, `plugin_name`, and the same CLI-derived fields as normal hook invocations (`-r`, `-plt`, `-c`, `-f`, `-g`, plus global options such as `-H` / `--with-hooks`). Example:
+
+```bash
+wpe rh pre_premake
+wpe run-hook post_build -r /path/to/plugin -c Release -plt Authoring
+```
 
 Default hook stubs are created with `wpe n`. See also `-H` / `--with-hooks` in `wpe -h`.
 

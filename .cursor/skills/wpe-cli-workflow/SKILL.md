@@ -3,17 +3,19 @@ name: wpe-cli-workflow
 description: >-
   Verifies wp-enhanced (`wpe` CLI) installation, installs from PyPI or editable
   source when missing, validates Wwise environment variables, runs wpe from the
-  correct working directory, and documents the build-agent HTTP API for remote
-  premake/build on another host (e.g. iOS on a Mac). Use when the user or task
-  involves wpe, wp-enhanced, Wwise plugin workflows, remote builds, build-agent,
-  or when shell commands fail with wpe not found or WWISEROOT/WWISESDK errors.
+  correct working directory, documents `run-hook` for executing a single
+  `.wpe/hooks` script with correct kwargs, and documents the build-agent HTTP API
+  for remote premake/build on another host (e.g. iOS on a Mac). Use when the user
+  or task involves wpe, wp-enhanced, Wwise plugin workflows, hooks, run-hook,
+  remote builds, build-agent, or when shell commands fail with wpe not found or
+  WWISEROOT/WWISESDK errors.
 ---
 
 # wp-enhanced (`wpe`) CLI workflow
 
 ## When to apply
 
-Use this workflow before running Premake, build, pack, or other `wpe` subcommands for a Wwise plug-in project.
+Use this workflow before running Premake, build, pack, `run-hook`, or other `wpe` subcommands for a Wwise plug-in project.
 
 ## Preconditions
 
@@ -136,15 +138,29 @@ Purely local actions that never import `WpWrapper` are rare for typical `wpe` fl
 | Global pip install | `wpe <subcommand> ...` from plug-in root (or any path under it; `PathMan` finds `PremakePlugin.lua`). |
 | Poetry in wp-enhanced repo | `poetry run wpe ...` from repo root. |
 | `wpe` not on PATH | `python -m wpe.cli ...` using the env where the package is installed. |
+| Run one hook file | `wpe run-hook <name>` or `wpe rh <name>` — executes `.wpe/hooks/<name>.py` with `proj_root`, `plugin_name`, and forwarded kwargs (see below). |
 
 Global options (see `wpe -h`):
 
 - `-r` / `--root` — project root if not using cwd discovery  
 - `-H` / `--with-hooks` — which hooks to run  
 
+### `run-hook` subcommand (`rh`)
+
+Use when you need to **only** run a hook script (e.g. `pre_premake`, `post_build`) without running the corresponding `wpe` command. Loads project config like other commands.
+
+- **Positional:** hook module name (`pre_premake` or `pre_premake.py`; path separators are not allowed).
+- **Forwarded into `main(**kwargs)`** together with globals: `root`, `withHooks`, `platforms`, `configuration` (default Debug), `force`, `gui`, etc. (same idea as automatic hook execution; `hook_name` and `func` are not passed).
+- **Examples:**
+
+```bash
+wpe rh pre_premake
+wpe run-hook post_build -r /path/to/plugin -c Release -plt Authoring
+```
+
 ---
 
-## 5. Build agent (remote machine)
+## 6. Build agent (remote machine)
 
 **Purpose:** Run `wpe p` / `wpe b` on a **second machine** that holds the repo checkout and toolchain (common for **iOS** builds on macOS while developing on Windows). The agent is a Flask app started by the `wpe` CLI; clients call it over HTTP instead of chaining SSH invocations of `wpe`.
 
@@ -177,7 +193,7 @@ Listens on `0.0.0.0:<port>`. No auth — use only on trusted networks or tunnel/
 
 ---
 
-## 6. Quick validation checklist
+## 7. Quick validation checklist
 
 Copy for tasks that need a green path:
 
@@ -185,11 +201,12 @@ Copy for tasks that need a green path:
 - [ ] `wpe -h` succeeds (or `poetry run wpe -h` / `python -m wpe.cli -h`)
 - [ ] Current directory is under the plug-in that contains PremakePlugin.lua (or pass `-r`)
 - [ ] `WWISEROOT` and `WWISESDK` set when running premake/build/pack/deploy flows
+- [ ] For `wpe rh <name>`: `.wpe/hooks/<name>.py` exists on disk
 ```
 
 ---
 
-## 7. Common failures
+## 8. Common failures
 
 | Symptom | Likely cause |
 |---------|----------------|
@@ -200,7 +217,7 @@ Copy for tasks that need a green path:
 
 ---
 
-## 8. Reference
+## 9. Reference
 
 - Project README: [README.md](../../../README.md) (from this skill folder, repo root).
 - PyPI package name: `wp-enhanced`; console script: `wpe`.

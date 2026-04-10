@@ -212,3 +212,21 @@ def config(args):
 def start_build_agent(args):
     build_agent = BuildAgent()
     build_agent.start(args.port)
+
+
+def run_hook(args):
+    hook_name = args.hook_name.strip()
+    if hook_name.endswith('.py'):
+        hook_name = hook_name[:-3]
+    if not hook_name or any(c in hook_name for c in '/\\') or hook_name.startswith('.'):
+        raise ValueError(f'Invalid hook name: {args.hook_name!r}')
+    session = Session.get(args)
+    hook_path = osp.join(session.pathMan.hooksDir, f'{hook_name}.py')
+    if not osp.isfile(hook_path):
+        raise FileNotFoundError(f'Hook not found: {hook_path}')
+    hook_module = util.safe_import_module(hook_name, session.pathMan.hooksDir)
+    logging.info(f'Running hook: {hook_name}')
+    extra = {k: v for k, v in vars(args).items() if k not in ('hook_name', 'func')}
+    hook_module.main(proj_root=session.pathMan.root,
+                     plugin_name=session.pathMan.pluginName,
+                     **extra)

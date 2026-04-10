@@ -282,6 +282,49 @@ def add_jetbrains_run_config_parser(subparsers):
     subparser.set_defaults(func=core.add_jetbrains_run_config)
 
 
+def add_run_hook_parser(subparsers):
+    subparser = subparsers.add_parser(
+        'run-hook',
+        aliases=['rh'],
+        description='Run a single file from `.wpe/hooks` with the same keyword arguments as when wpe invokes hooks automatically (proj_root, plugin_name, plus command-line options).'
+    )
+    subparser.add_argument(
+        'hook_name',
+        type=str,
+        help='Hook module name, e.g. pre_premake or pre_premake.py'
+    )
+    add_platform_arg(subparser)
+    subparser.add_argument(
+        '-c',
+        '--configuration',
+        action='store',
+        choices=('Debug', 'Profile', 'Release'),
+        dest='configuration',
+        default='Debug',
+        required=False,
+        help='Configuration (for hooks that read build-related args). Default Debug.'
+    )
+    subparser.add_argument(
+        '-f',
+        '--force',
+        action='store_true',
+        dest='force',
+        required=False,
+        default=False,
+        help='Forwarded to kwargs (for hooks that mirror generate-parameters).'
+    )
+    subparser.add_argument(
+        '-g',
+        '--gui',
+        action='store_true',
+        dest='gui',
+        required=False,
+        default=False,
+        help='Forwarded to kwargs (for hooks that mirror generate-parameters).'
+    )
+    subparser.set_defaults(func=core.run_hook)
+
+
 def main(args=None):
     parser = argparse.ArgumentParser(
         prog='wpe',
@@ -306,6 +349,7 @@ def main(args=None):
     add_build_agent_parser(subparsers)
     add_config_parser(subparsers)
     add_jetbrains_run_config_parser(subparsers)
+    add_run_hook_parser(subparsers)
 
     generate_integrated_description(parser, subparsers)
 
