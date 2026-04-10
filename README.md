@@ -141,6 +141,7 @@ Default parameter examples for new projects:
 | Pack | `wpe P` | Collects artifacts into `dist/`; **does not build** |
 | Full pack | `wpe FP` | Build (including Release-style full pack flow) then pack for distribution |
 | Deploy | `wpe d` | Deploy a packaged archive (see below) |
+| Build agent | `wpe ba` | HTTP service on a **build machine** for remote `premake` / `build` (see below) |
 
 ### Deploy
 
@@ -154,6 +155,32 @@ wpe d -d <destination>
 - **Unreal (Wwise integrated):** pass the UE project root (folder containing `.uproject`).
 
 Use `-a` / `--archive` to point at a specific `.zip`; if omitted, a recent archive under `dist/` is used.
+
+### Build agent (remote builds)
+
+Use this when a platform must be built on another machine (typical case: **iOS** on a Mac, where driving Xcode over SSH is awkward or fails on permissions). You run a small **Flask** HTTP service on the machine that has the toolchain; your dev machine (or CI) calls it to sync Git, run `wpe p`, and `wpe b` on a **checkout path on that machine**.
+
+**Start the agent** on the build host (install `wp-enhanced` and set `WWISEROOT` / `WWISESDK` there first):
+
+```bash
+wpe build-agent
+# or: wpe ba
+# optional: wpe ba -p 5000   (default port is 5000)
+```
+
+The process listens on `0.0.0.0` and the given port. Only use on trusted networks or behind a firewall; there is no built-in authentication.
+
+**HTTP API** (all routes are `POST` with `Content-Type: application/json`):
+
+| Path | Body (JSON) | What it runs on the agent |
+|------|-------------|---------------------------|
+| `/git_sync` | `root`, `branch` | `git -C <root> fetch origin` then `git -C <root> reset --hard origin/<branch>` |
+| `/premake` | `root`, `platform` | `wpe p -r <root> -plt <platform>` |
+| `/build` | `root`, `platform`, `configuration` | `wpe b -r <root> -c <configuration> -plt <platform>` |
+
+`root` must be the plug-in project root on the **build machine** (the tree that contains `PremakePlugin.lua`). Responses include `succeeded` and command output fields; non-success uses HTTP 500.
+
+**End-to-end example:** the template hook [`src/wpe/templates/.wpe/hooks/pre_full_pack.py`](src/wpe/templates/.wpe/hooks/pre_full_pack.py) shows an optional **remote iOS** flow: set `_build_agent_host`, `_build_agent_account`, and `_proj_root_on_build_agent`, then during `wpe FP` the hook can call the agent to sync Git, premake iOS, build Debug/Profile/Release, and copy binaries back via `scp`. Adjust host/port in that script if you change `-p` on the agent.
 
 ---
 
