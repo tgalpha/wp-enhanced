@@ -1,62 +1,84 @@
 # wp-enhanced
-Wrapper of `wp.py`. Easy to premake, build, deploy and distribute wwise plugins.
 
-# Installation
-1. Install wpe from pip
-    ```
-    pip install wp-enhanced
-    ```
-2. Set wwise environment variables
-    - Windows:
-        - Set from Wwise Launcher
-    
-        ![image](https://github.com/user-attachments/assets/624e498d-1f86-4839-9469-a7106e60a6fc)
+A wrapper around the Wwise `wp.py` helper that streamlines Premake, builds, packaging, deployment, and distribution of Wwise plug-ins.
 
-    - MacOS:
-        - Set `WWISEROOT` and `WWISESDK` manually
-    
-3. Check installation
-    ```
-    wpe -h
-    ```
+**Requirements:** Python 3.9+, Wwise SDK with `WWISEROOT` / `WWISESDK` set (see below).
 
-# Start to create your plugin
-> The following mentioned `wpe` command line parameters will use shorter subcommands aliases. For the full subcommands name, you can view them by running `wpe -h`.
-> 
-> Run `wpe <SUBCOMMAND> -h` to view the help message of each subcommand.
+---
 
-## Create new plugin project
-Run `wpe n` to create new project just like original `python wp.py new`.
+## Install
 
-After creating new project, you can find `.wpe` directory in your project root which is created by wpe. The directory structure should be like:
+1. **Install the CLI**
+
+   ```bash
+   pip install wp-enhanced
+   ```
+
+2. **Environment variables**
+
+   - **Windows:** set `WWISEROOT` and `WWISESDK` via Wwise Launcher (or manually).
+
+     ![Wwise environment from Launcher](https://github.com/user-attachments/assets/624e498d-1f86-4839-9469-a7106e60a6fc)
+
+   - **macOS:** set `WWISEROOT` and `WWISESDK` manually.
+
+3. **Verify**
+
+   ```bash
+   wpe -h
+   ```
+
+Subcommands are often shown as short aliases (e.g. `wpe n`). Run `wpe -h` for full names and `wpe <subcommand> -h` for per-command help.
+
+---
+
+## New project
+
+Create a project (equivalent to `python wp.py new`):
+
+```bash
+wpe n
 ```
-./.wpe
-|-- hooks
-|   |-- post_build.py
-|   |-- post_full_pack.py
-|   `-- pre_premake.py
-`-- wpe_project.toml
-```
-- `wpe_project.toml`: wpe project configuration file.
-- `hooks`: hooks for specific wpe actions. Refer to [Hooks](#hooks) for more information.
 
-## Configure project
-Head to `$PROJECT_ROOT/.wpe/wpe_project.toml`, the project configuration can is divided into four parts.
+This creates a `.wpe` directory at the project root:
+
+```text
+.wpe/
+├── hooks/
+│   ├── post_build.py
+│   ├── pre_full_pack.py
+│   └── pre_premake.py
+└── wpe_project.toml
+```
+
+- **`wpe_project.toml`** — project settings for wp-enhanced.
+- **`hooks/`** — optional scripts for build lifecycle steps (see [Hooks](#hooks)).
+
+---
+
+## Configure the project
+
+Edit `$PROJECT_ROOT/.wpe/wpe_project.toml`. Configuration is grouped into: **version**, **platform targets**, **plug-in info**, and **parameters**.
 
 ### Version
-Determine the version of plugin, which affects packing the plugin archive.
 
-You can bump plugin version by running `wpe B`
+Used when packaging the plug-in archive. Bump with:
+
+```bash
+wpe B
+```
+
 ```toml
 [project]
 version = 1
 ```
 
-### Platform support 
-Defines the supported platforms when using Premake to build the plugin.
+### Platform targets
 
-`win_targets`/`mac_targets` means your develop machine platform. e.g. In default configuration, when developing on Windows, you can build for Windows Authoring, Windows_vc160, Android.
-> Currently developing on Windows is recommended, as MacOS authoring plugin is not supported yet.
+Controls which platforms Premake / builds target. Use `win_targets` on Windows and `mac_targets` on macOS.
+
+Developing on **Windows** is recommended; macOS Authoring plug-ins are not supported in the same way.
+
 ```toml
 [project]
 version = 1
@@ -70,9 +92,11 @@ mac_targets = [
 ]
 ```
 
-### Plugin info
-- `MenuPath`: Plugins with the same menu path will be grouped in the Wwise plugin popup menu.
-- `platform_support`: Inform Wwise Authoring where this plugin can be inserted and whether it can be rendered offline.
+### Plug-in info
+
+- **`MenuPath`** — groups plug-ins under the same path in the Wwise UI.
+- **`platform_support`** — tells Wwise Authoring where the effect can be inserted and if it can be rendered offline.
+
 ```toml
 [plugin_info]
 MenuPath = 'custom'
@@ -84,60 +108,76 @@ CanBeRendered = true
 ```
 
 ### Parameters
-The initially generated configuration contains several typical parameter definition examples.
-- [wpe_project.toml](src%2Fwpe%2Ftemplates%2F.wpe%2Fwpe_project.toml)
 
-Run `wpe gp` to generate parameters code.
+The generated config includes example parameter definitions. Reference template:
 
-Be careful the followed files will be **overwritten** by template if `[wp-enhanced template]` comment is not found in file:
- - [ProjectNameFXParams.cpp](src%2Fwpe%2Ftemplates%2FSoundEnginePlugin%2FProjectNameFXParams.cpp)
- - [ProjectNameFXParams.h](src%2Fwpe%2Ftemplates%2FSoundEnginePlugin%2FProjectNameFXParams.h)
- - [ProjectName.xml](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FProjectName.xml)
- - [ProjectNamePlugin.cpp](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FProjectNamePlugin.cpp)
- - [ProjectNamePlugin.h](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FProjectNamePlugin.h)
+- [`src/wpe/templates/.wpe/wpe_project.toml`](src/wpe/templates/.wpe/wpe_project.toml)
 
-if `-gui` flag is set: 
- - [ProjectNamePluginGUI.cpp](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FWin32%2FProjectNamePluginGUI.cpp)
- - [ProjectNamePluginGUI.h](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FWin32%2FProjectNamePluginGUI.h)
- - [resource.h](src%2Fwpe%2Ftemplates%2FWwisePlugin%2Fresource.h)
- - [ProjectName.rc](src%2Fwpe%2Ftemplates%2FWwisePlugin%2FProjectName.rc)
+Generate code from parameters:
 
-New plugin project will be created with default parameters: [wpe_project.toml](src%2Fwpe%2Ftemplates%2F.wpe%2Fwpe_parameters.toml)
+```bash
+wpe gp
+```
 
+**Overwrite behavior:** if a file does **not** contain the marker `[wp-enhanced template]`, `wpe gp` may overwrite it from templates. Typical paths:
 
-## Premake
-Run `wpe p`. Default to premake all platforms defined in targets. You can also specify platforms by `-plt` flag.
+| Scope | Files |
+|--------|--------|
+| Core | `ProjectNameFXParams.cpp`, `ProjectNameFXParams.h`, `ProjectName.xml`, `ProjectNamePlugin.cpp`, `ProjectNamePlugin.h` |
+| With `-g` / `--gui` | `ProjectNamePluginGUI.cpp`, `ProjectNamePluginGUI.h`, `resource.h`, `ProjectName.rc` |
 
-## Build
-Run `wpe b`. Default to build all platforms defined in targets with Debug config. You can also specify platforms by `-plt` flag, and specify config by `-c` flag.
+Default parameter examples for new projects:
 
-## Pack
-Run `wpe P` to package plugin. This will collect the build artifacts for all local platforms and generate the plugin archive in the `dist` directory.
-> Will NOT build plugin. If you need to fully build plugin and package it for distribution, try `wpe FP`
+- [`src/wpe/templates/.wpe/wpe_parameters.toml`](src/wpe/templates/.wpe/wpe_parameters.toml)
 
-## Deploy
-After package your plugin into an archive, you can run `wpe d` to deploy it to different places.
+---
 
-Currently supported:
-- Pass WwiseRoot to `-d` argument to deploy to Wwise Authoring.
-- Pass Wwise integrated UE project root to `-d` argument to deploy to UE project.
+## Common commands
 
+| Action | Command | Notes |
+|--------|---------|--------|
+| Premake | `wpe p` | All targets from config, or restrict with `-plt` |
+| Build | `wpe b` | Default **Debug**; use `-c` for configuration, `-plt` for platforms |
+| Pack | `wpe P` | Collects artifacts into `dist/`; **does not build** |
+| Full pack | `wpe FP` | Build (including Release-style full pack flow) then pack for distribution |
+| Deploy | `wpe d` | Deploy a packaged archive (see below) |
+
+### Deploy
+
+After packaging:
+
+```bash
+wpe d -d <destination>
+```
+
+- **Wwise Authoring:** pass the Wwise installation root (e.g. directory containing `Authoring/.../Wwise.exe`).
+- **Unreal (Wwise integrated):** pass the UE project root (folder containing `.uproject`).
+
+Use `-a` / `--archive` to point at a specific `.zip`; if omitted, a recent archive under `dist/` is used.
+
+---
 
 ## Hooks
-All hooks should be placed in `$PROJECT_ROOT/.wpe/hooks` folder. 
 
-`pre`/`post`_`premake`/`generate_parameters`/`build`/`pack`/`full_pack` are supported.
+Place scripts under `$PROJECT_ROOT/.wpe/hooks/`. Name files `pre_<command>.py` or `post_<command>.py`, where `<command>` matches the action (e.g. `premake`, `generate_parameters`, `build`, `pack`, `full_pack`; also `test`, `bump`, `rename`, `deploy` when those commands are used).
 
-Hook scripts should contain a `main` function with `**kwargs`, the followed arguments are passed by wpe:
-- `proj_root`: project root directory
-- `plugin_name`
-- subcommand args. For example, build command will pass `platforms` and `configuration`.
+Each script should define `main(**kwargs)`. wp-enhanced passes at least:
 
-Some default are created when creating new project, you can modify them or add new hooks.
+- `proj_root` — project root path  
+- `plugin_name` — plug-in name  
 
-For more information about hooks, please refer to description of `-H, --with-hooks` in `wpe -h`
+Additional keys depend on the command (e.g. build passes `platforms`, `configuration`).
 
-# Integrate wpe to existing project
-If your have existing project, you can integrate wpe to it by running `wpe i` in your project root.
+Default hook stubs are created with `wpe n`. See also `-H` / `--with-hooks` in `wpe -h`.
 
-**CAUTION ❗❗**: Make sure to stage your modified files before running `wpe i`, as the parameters code generation may overwrite your files.
+---
+
+## Integrate into an existing project
+
+From the plug-in project root:
+
+```bash
+wpe i
+```
+
+**Caution:** commit or stash your work first. Parameter generation may overwrite files if the `[wp-enhanced template]` guard is missing.
