@@ -57,8 +57,7 @@ EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 // [Controls]
-LTEXT "Bool Param As Checkbox",IDC_STATIC,0,8,48,10
-CONTROL "BoolParamAsCheckbox",IDC_BoolParamAsCheckbox,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,48,6,64,12
+CONTROL "BoolParamAsCheckbox",IDC_BoolParamAsCheckbox,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,0,6,112,12
 LTEXT "Int Parameter as Combo Box",IDC_STATIC,0,26,48,10
 LTEXT "Class=Combo;Prop=IntParamAsComboBox;Options=0:Option 1, 1:Option 2",IDC_IntParamAsComboBox,48,24,64,12
 LTEXT "Float Param As Slider",IDC_STATIC,0,44,48,10

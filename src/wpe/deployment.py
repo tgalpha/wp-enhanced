@@ -112,18 +112,19 @@ class UEDeployment(Deployment):
                 with tarfile.open(fileobj=xz) as tar:
                     is_android = pkg.deployment_platforms() == 'Android'
                     for member in tar.getmembers():
-                        new_name = member.name.lstrip('SDK/')
+                        new_name = member.name.removeprefix('SDK/')
                         if is_android:
                             for arch in ('arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'):
                                 new_name = new_name.replace(f'Android_{arch}', f'Android/{arch}')
                         member.name = new_name
-                    parent = member.name.split('/')[0]
-                    if osp.isdir(osp.join(self.pluginDeployDir, parent)):
+                    members = tar.getmembers()
+                    parents = {m.name.split('/')[0] for m in members if m.name}
+                    if any(osp.isdir(osp.join(self.pluginDeployDir, p)) for p in parents):
                         tar.extractall(self.pluginDeployDir)
-                        print('\n'.join([extracted for member in tar.getmembers() if osp.isfile(
+                        print('\n'.join([extracted for member in members if osp.isfile(
                             extracted := osp.normpath(osp.join(self.pluginDeployDir, member.name)))]))
                     else:
-                        print(f'Parent directory dose not exist, skip: {parent}')
+                        print(f'Parent directory does not exist, skip: {", ".join(sorted(parents))}')
 
 
 class AuthoringDeployment(Deployment):

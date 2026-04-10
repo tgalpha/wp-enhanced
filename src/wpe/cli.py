@@ -261,7 +261,7 @@ def add_rename_parser(subparsers):
         description='Rename plugin.'
     )
     subparser.add_argument(
-        '-n'
+        '-n',
         '--new-name',
         action='store',
         type=str,

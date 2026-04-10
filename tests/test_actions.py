@@ -45,12 +45,6 @@ def setup_function():
     unload_wp_modules()
 
 
-def teardown_function():
-    args.destProject = os.getenv('WWISEROOT')
-    args.name = test_plugin_name
-    core.clean(args)
-
-
 @pytest.fixture
 def args(request, tmp_path):
     """

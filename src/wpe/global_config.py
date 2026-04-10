@@ -58,7 +58,7 @@ class GlobalConfig:
                 return int(_value)
             elif type(self._DEFAULT_CONFIG[key]) is float:
                 return float(_value)
-            return value
+            return _value
 
         if key not in self._configDict:
             raise KeyError(f'Invalid config key: {key}')

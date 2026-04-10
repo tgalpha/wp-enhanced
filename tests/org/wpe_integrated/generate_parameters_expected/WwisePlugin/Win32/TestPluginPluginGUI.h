@@ -2,6 +2,7 @@
 // [wp-enhanced template] **Do not delete this line**
 
 #include "../TestPluginPlugin.h"
+//  [wp-enhanced] Uncomment the following lines if you want to use a custom GUI
 #include "../resource.h"
 
 class TestPluginPluginGUI final

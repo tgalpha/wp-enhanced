@@ -41,7 +41,8 @@ class HookProcessor:
     def _process_hook(self, phase, command):
         def should_execute(_hook_name):
             if not self.targetHooks or _hook_name in self.targetHooks:
-                return osp.isfile(osp.join(self.pathMan.hooksDir, f'{hook_name}.py'))
+                return osp.isfile(osp.join(self.pathMan.hooksDir, f'{_hook_name}.py'))
+            return None
 
         hook_name = f'{phase}_{command}'
         if not should_execute(hook_name):

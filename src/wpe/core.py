@@ -83,7 +83,7 @@ def init_wpe(args):
 def premake(args):
     session = Session.get(args)
     logging.info('Premake project')
-    platforms = set([plt.platform for plt in session.targetPlatforms])
+    platforms = {plt.platform for plt in session.targetPlatforms}
     for plt in platforms:
         WpWrapper().premake(plt)
 
