@@ -141,6 +141,7 @@ Default parameter examples for new projects:
 | Pack | `wpe P` | Collects artifacts into `dist/`; **does not build** |
 | Full pack | `wpe FP` | Build (including Release-style full pack flow) then pack for distribution |
 | Deploy | `wpe d` | Deploy a packaged archive (see below) |
+| Clean | `wpe clean` | Remove deployed plug-in files from a destination project (see below) |
 | Build agent | `wpe ba` | HTTP service on a **build machine** for remote `premake` / `build` (see below) |
 | Run hook | `wpe rh` | Run one `.wpe/hooks/<name>.py` with the same kwargs as automatic hooks (see [Hooks](#hooks)) |
 
@@ -156,6 +157,22 @@ wpe d -d <destination>
 - **Unreal (Wwise integrated):** pass the UE project root (folder containing `.uproject`).
 
 Use `-a` / `--archive` to point at a specific `.zip`; if omitted, a recent archive under `dist/` is used.
+
+### Clean
+
+Remove files that were previously deployed with `wpe d`. Target detection is the same as deploy (Wwise Authoring vs Unreal):
+
+```bash
+wpe clean -d <destination>
+# alias: wpe c -d <destination>
+```
+
+- **`-d` / `--dest-project`** (required) — Wwise installation root or UE project root, same as `wpe d`.
+- **`-n` / `--name`** (optional) — plug-in name to match when deleting files. Defaults to the name of the current plug-in project (from `PremakePlugin.lua`).
+
+Under the destination, wpe recursively finds paths whose names contain the plug-in name and deletes them (Authoring: under the Wwise root; UE: under `Plugins/Wwise/ThirdParty`).
+
+**Caution:** this is a simple filename-based delete, not an uninstaller. Use with care outside local dev; verify paths before running in shared or production environments.
 
 ### Build agent (remote builds)
 
