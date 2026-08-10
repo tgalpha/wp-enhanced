@@ -1,3 +1,4 @@
+import logging
 import os
 import os.path as osp
 import platform
@@ -7,6 +8,7 @@ import kkpyutil as util
 
 import wpe.util as wpe_util
 from wpe.global_config import GlobalConfig, ConfigKey
+from wpe.wp_patch.resolver import patch_tag
 
 
 def create_sdk_symlink(wwise_sdk):
@@ -44,6 +46,7 @@ class WpWrapper:
         self.wwiseVersion: str = self._load_wwise_version()
         self.wpScriptDir = osp.join(self.wwiseRoot, 'Scripts/Build/Plugins')
         util.lazy_prepend_sys_path([self.wpScriptDir])
+        logging.info(f'Using wp_patch/{patch_tag()} for Wwise {self.wwiseVersion}')
 
         self.subcommands = (
             'build',
@@ -87,8 +90,8 @@ class WpWrapper:
         if plt == 'Linux' and GlobalConfig().get(ConfigKey.USE_WSL_FOR_LINUX):
             return self.build_with_wsl(*args)
 
-        import wpe.wp_patch.build as wpe_build
-        res = wpe_build.run(args)
+        import wpe.wp_patch.resolver as wp_patch
+        res = wp_patch.patch_module('build').run(args)
         if res != 0:
             raise RuntimeError(f'Build failed. Exit code: {res}')
         return res
@@ -104,8 +107,8 @@ class WpWrapper:
 
     @staticmethod
     def package(*args):
-        import wpe.wp_patch.package as wpe_package
-        res = wpe_package.run(args)
+        import wpe.wp_patch.resolver as wp_patch
+        res = wp_patch.patch_module('package').run(args)
         return res
 
     @inject_wwise_sdk_for_android
@@ -114,8 +117,8 @@ class WpWrapper:
         if plt == 'Linux' and GlobalConfig().get(ConfigKey.USE_WSL_FOR_LINUX):
             return self.premake_with_wsl(*args)
 
-        import wpe.wp_patch.premake as wpe_premake
-        res = wpe_premake.run(args)
+        import wpe.wp_patch.resolver as wp_patch
+        res = wp_patch.patch_module('premake').run(args)
         return res
 
     def premake_with_wsl(self, *args):

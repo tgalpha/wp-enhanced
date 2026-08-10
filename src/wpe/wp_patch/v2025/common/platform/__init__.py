@@ -9,15 +9,11 @@ may use this file in accordance with the end user license agreement provided
 with the software or, alternatively, in accordance with the terms contained in a
 written agreement between you and Audiokinetic Inc.
 
-  Copyright (c) 2021 Audiokinetic Inc.
+  Copyright (c) 2026 Audiokinetic Inc.
 """
 
 import os
 import os.path as osp
-
-import packaging.version as pkg_ver
-
-from wpe.wp_wrapper import WpWrapper
 
 
 def basename_without_extension(path):
@@ -31,12 +27,11 @@ def installed_in_sdk(module_name):
 def should_import(filename):
     module_name = basename_without_extension(filename)
 
-    if module_name == 'ps5':
-        wp_wrapper = WpWrapper()
-        wwise_version = pkg_ver.parse(wp_wrapper.wwiseVersion)
-        # Wwise from 2021.1.12 and up supports multiple Prospero SDK versions
-        if wwise_version >= pkg_ver.parse('2021.1.12'):
+    if module_name in ('android', 'ps5'):
+        if module_name == 'ps5' and installed_in_sdk(module_name):
             return False
+        return filename.endswith('.py') and filename != osp.basename(__file__)
+
     return installed_in_sdk(module_name) and filename.endswith(".py") and filename != osp.basename(__file__)
 
 

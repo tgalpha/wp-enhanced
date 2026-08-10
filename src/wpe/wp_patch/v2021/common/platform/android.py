@@ -15,7 +15,7 @@ written agreement between you and Audiokinetic Inc.
 from __future__ import absolute_import
 import os
 # [wp-enhanced patch] import android platform patch
-from wpe.wp_patch.common.command.android import build, SUPPORTED_BUILD_SYSTEMS
+from wpe.wp_patch.v2021.common.command.android import build, SUPPORTED_BUILD_SYSTEMS
 # [/wp-enhanced patch]
 from common.registry import PlatformInfo, PremakeInfo, BuildInfo, PackageInfo, platform_registry
 
