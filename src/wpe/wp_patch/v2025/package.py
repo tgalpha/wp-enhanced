@@ -133,12 +133,17 @@ def run(argv):
         if is_documentation(platform_info.name):
             formatted_platforms = ["Authoring.{}".format(platform_info.name)]
         elif is_authoring_target(platform_info.name):
-            formatted_platforms = [{
-                                       "Authoring_Windows": "{}_{}.x64",
-                                       "Authoring_Mac": "{}_{}.macosx_gmake",
-                                       "Authoring_Linux": "{}_{}.linux_gmake"
-                                   }.get(platform_info.name, "{}").format(platform_info.name, config) for config in ["Debug", "Release"]
-                                   ]
+            platform_format = {
+                "Authoring_Windows": "{platform}_{arch}.{config}",
+                "Authoring_Mac": "{platform}_x64.{config}", # TODO: Split x64 and arm64
+                "Authoring_Linux": "{platform}_{arch}.{config}"
+            }.get(platform_info.name, "{}")
+
+            formatted_platforms = list(
+                platform_format.format(platform=platform_info.name.replace('_', '.'), config=config, arch=arch) \
+                    for arch in platform_info.build.archs \
+                    for config in  ("Debug", "Release")
+            )
         else:
             formatted_platforms = ["SDK.{}".format(platform_info.name)]
 
@@ -150,15 +155,15 @@ def run(argv):
             ) for formatted_platform in formatted_platforms
         ]
 
-        output_name_re = re.compile(r"^" + PLUGIN_NAME + r"_v\d+\.\d+\.\d+_Build\d+_(Authoring|Authoring_Windows|Authoring_Linux|Authoring_Mac)_(?P<config>Debug|Release)(?:\.(.*))?\.tar\.xz$")
+        output_name_re = re.compile(r"^" + PLUGIN_NAME + r"_v\d+\.\d+\.\d+_Build\d+_(?P<type>Authoring|SDK)\.(?P<platform>[A-z0-9_]+)(\.(?P<configuration>Debug|Release))?\.tar\.xz$")
 
         def is_authoring_debug_package(output_name):
             match = re.match(output_name_re, output_name)
-            return False if match is None else match.group("config") == "Debug"
+            return False if match is None else match.group("configuration") == "Debug"
 
         def is_authoring_release_package(output_name):
             match = re.match(output_name_re, output_name)
-            return False if match is None else match.group("config") == "Release"
+            return False if match is None else match.group("configuration") == "Release"
 
         def is_data_artifact(artifact):
             return os.path.join("Authoring", "Data") in artifact or os.path.join("Authoring", "Help") in artifact

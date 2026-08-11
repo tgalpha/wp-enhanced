@@ -50,6 +50,49 @@ class Session:
         return cls.current
 
 
+def _wp_supported_platforms(wp_command: str) -> set[str]:
+    WpWrapper()  # prepend Wwise Scripts/Build/Plugins to sys.path
+    import wpe.wp_patch.resolver as wp_patch
+    return set(wp_patch.patch_module(wp_command).SUPPORTED_PLATFORMS)
+
+
+def _filter_supported_platforms(platforms: list[str], wp_command: str) -> list[str]:
+    supported = _wp_supported_platforms(wp_command)
+    result = []
+    for plt in platforms:
+        if plt in supported:
+            result.append(plt)
+        else:
+            logging.warning(
+                f'Skip platform "{plt}" for wp.py {wp_command}: not supported on this '
+                f'host/Wwise install (available: {", ".join(sorted(supported))}).'
+            )
+    return result
+
+
+def _filter_supported_targets(targets: list[PlatformTarget], wp_command: str) -> list[PlatformTarget]:
+    supported = _wp_supported_platforms(wp_command)
+    result = []
+    for target in targets:
+        if target.platform in supported:
+            result.append(target)
+        else:
+            logging.warning(
+                f'Skip platform "{target.platform}" for wp.py {wp_command}: not supported on this '
+                f'host/Wwise install (available: {", ".join(sorted(supported))}).'
+            )
+    return result
+
+
+def _build_documentation():
+    if 'Documentation' in _wp_supported_platforms('build'):
+        WpWrapper().build('Documentation')
+    else:
+        logging.warning(
+            'Skip Documentation build: not supported by wp.py build on this host/Wwise install.'
+        )
+
+
 def wp(args):
     logging.info('Run wp.py')
     WpWrapper().wp(args.wpArgs)
@@ -83,7 +126,10 @@ def init_wpe(args):
 def premake(args):
     session = Session.get(args)
     logging.info('Premake project')
-    platforms = {plt.platform for plt in session.targetPlatforms}
+    platforms = _filter_supported_platforms(
+        list({plt.platform for plt in session.targetPlatforms}),
+        'premake',
+    )
     for plt in platforms:
         WpWrapper().premake(plt)
 
@@ -100,19 +146,19 @@ def generate_parameters(args):
                                            is_forced=session.args.force,
                                            generate_gui_resource=session.args.gui)
     parameter_manager.main()
-    WpWrapper().build('Documentation')
+    _build_documentation()
 
 
 @HookProcessor().register('build')
 def build(args):
     session = Session.get(args)
     logging.info('Build plugin')
-    for plt in session.targetPlatforms:
-        args = [plt.platform, '-c', session.args.configuration, '-x'] + plt.architectures
+    for plt in _filter_supported_targets(session.targetPlatforms, 'build'):
+        build_args = [plt.platform, '-c', session.args.configuration, '-x'] + plt.architectures
         if plt.need_toolset():
-            args.extend(['-t', plt.toolset()])
-        WpWrapper().build(*args)
-    WpWrapper().build('Documentation')
+            build_args.extend(['-t', plt.toolset()])
+        WpWrapper().build(*build_args)
+    _build_documentation()
 
 
 @HookProcessor().register('test')
@@ -134,6 +180,11 @@ def pack(args):
 
     session = Session.get(args)
     logging.info('Package plugin and generate bundle')
+    for stale_pkg in glob.iglob(osp.join(session.pathMan.root, f'{session.pathMan.pluginName}*.tar.xz')):
+        util.remove_file(stale_pkg)
+    stale_bundle = osp.join(session.pathMan.root, 'bundle.json')
+    if osp.isfile(stale_bundle):
+        util.remove_file(stale_bundle)
     version_code, build_number = WpWrapper().wwiseVersion.rsplit('.', 1)
     build_number = session.projConfig.version()
 
@@ -141,7 +192,7 @@ def pack(args):
     output_dir = osp.join(session.pathMan.distDir, f'{session.pathMan.pluginName}_v{version_code}_Build{build_number}')
     WpWrapper().package('Common', '-v', plugin_version)
     WpWrapper().package('Documentation', '-v', plugin_version)
-    for plt in session.projConfig.all_platform_names():
+    for plt in _filter_supported_platforms(session.projConfig.all_platform_names(), 'package'):
         WpWrapper().package(plt, '-v', plugin_version)
     WpWrapper().generate_bundle('-v', plugin_version)
     _collect_packages(output_dir)
@@ -156,7 +207,7 @@ def full_pack(args):
     args.configuration = 'Release'
     args.platforms = session.projConfig.all_platform_names()
     hook_processor.process_pre_hook('build')
-    for plt in session.targetPlatforms:
+    for plt in _filter_supported_targets(session.targetPlatforms, 'build'):
         build_args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
         if plt.need_toolset():
             build_args.extend(['-t', plt.toolset()])
