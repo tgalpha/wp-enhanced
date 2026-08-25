@@ -2,12 +2,20 @@ import glob
 import json
 import os
 import os.path as osp
+import re
 import zipfile
 import tarfile
 import lzma
+from typing import Optional
+
+import kkpyutil as util
 
 from wpe.pathman import PathMan
 import wpe.util as wpe_util
+
+_ARCHIVE_NAME_RE = re.compile(
+    r'^(?P<plugin>.+)_v(?P<wwise_version>\d+\.\d+\.\d+)_Build(?P<build>\d+)\.zip$'
+)
 
 
 class _Package:
@@ -86,14 +94,51 @@ class Deployment:
             return self.args.archive
         pathman = PathMan()
         dist_dir = pathman.distDir
-        # find the latest archive
+        plugin_name = pathman.pluginName
+        wwise_version_code = self._current_wwise_version_code()
         archives = glob.glob(osp.join(dist_dir, '*.zip'))
         if not archives:
-            raise FileNotFoundError('No archive found in dist directory.')
-        return max(archives, key=os.path.getctime)
+            raise FileNotFoundError(f'No archive found in dist directory: {dist_dir}')
+
+        matching = []
+        for archive in archives:
+            parsed = self._parse_archive_name(archive)
+            if not parsed:
+                continue
+            if parsed['plugin'] == plugin_name and parsed['wwise_version'] == wwise_version_code:
+                matching.append(archive)
+
+        if not matching:
+            available = ', '.join(sorted(osp.basename(archive) for archive in archives))
+            raise FileNotFoundError(
+                f'No archive found for plugin "{plugin_name}" and Wwise {wwise_version_code} '
+                f'in {dist_dir}. Available archives: {available}'
+            )
+        selected = max(matching, key=os.path.getmtime)
+        print(f'Using archive: {osp.basename(selected)}')
+        return selected
+
+    @staticmethod
+    def _current_wwise_version_code() -> str:
+        wwise_root = os.getenv('WWISEROOT')
+        if not wwise_root:
+            raise EnvironmentError('WWISEROOT is not set')
+        install_entry = util.load_json(osp.join(wwise_root, 'install-entry.json'))
+        version = install_entry['bundle']['version']
+        return f'{version["year"]}.{version["major"]}.{version["minor"]}'
+
+    @staticmethod
+    def _parse_archive_name(archive_path: str) -> Optional[dict[str, str]]:
+        match = _ARCHIVE_NAME_RE.match(osp.basename(archive_path))
+        if not match:
+            return None
+        return match.groupdict()
 
     @staticmethod
     def _get_plugin_name_from_archive(archive):
+        parsed = Deployment._parse_archive_name(archive)
+        if parsed:
+            return parsed['plugin']
         return osp.basename(archive).split('_')[0]
 
 
