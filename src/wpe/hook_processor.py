@@ -38,14 +38,25 @@ class HookProcessor:
     def process_post_hook(self, command):
         self._process_hook('post', command)
 
-    def _process_hook(self, phase, command):
-        def should_execute(_hook_name):
-            if not self.targetHooks or _hook_name in self.targetHooks:
-                return osp.isfile(osp.join(self.pathMan.hooksDir, f'{_hook_name}.py'))
-            return None
-
+    def will_execute(self, phase, command) -> bool:
         hook_name = f'{phase}_{command}'
-        if not should_execute(hook_name):
+        if self.targetHooks and hook_name not in self.targetHooks:
+            return False
+        return osp.isfile(osp.join(self.pathMan.hooksDir, f'{hook_name}.py'))
+
+    def parallel_with(self, phase, command) -> set[str]:
+        """
+        Step kinds the hook declares it may run in parallel with, via a module-level variable, e.g.
+        `WPE_PARALLEL_WITH = ['build']`. Only honored by commands supporting it (currently `full-pack`).
+        """
+        if not self.will_execute(phase, command):
+            return set()
+        hook_module = util.safe_import_module(f'{phase}_{command}', self.pathMan.hooksDir)
+        return set(getattr(hook_module, 'WPE_PARALLEL_WITH', None) or ())
+
+    def _process_hook(self, phase, command):
+        hook_name = f'{phase}_{command}'
+        if not self.will_execute(phase, command):
             return
 
         hook_module = util.safe_import_module(hook_name, self.pathMan.hooksDir)

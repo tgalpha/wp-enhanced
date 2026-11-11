@@ -138,8 +138,8 @@ Default parameter examples for new projects:
 |--------|---------|--------|
 | Premake | `wpe p` | All targets from config, or restrict with `-plt` |
 | Build | `wpe b` | Default **Debug**; use `-c` for configuration, `-plt` for platforms |
-| Pack | `wpe P` | Collects artifacts into `dist/`; **does not build** |
-| Full pack | `wpe FP` | Build (including Release-style full pack flow) then pack for distribution |
+| Pack | `wpe P [-j N]` | Collects artifacts into `dist/`; **does not build**. Targets (Common, Documentation, each platform) are packaged in parallel (`-j`, same default as below), per-target logs go to `Output/wpe_logs/pack_<timestamp>/` |
+| Full pack | `wpe FP [-j N]` | Build all platforms (Release/Profile/Debug) then pack for distribution. Platforms build in parallel and targets are packaged in parallel (`-j`, default: CPU core count - 6, at least 1); the terminal shows a progress dashboard and timing summary, all build/hook/pack output goes to `Output/wpe_logs/full_pack_<timestamp>/` |
 | Deploy | `wpe d` | Deploy a packaged archive (see below) |
 | Clean | `wpe clean` | Remove deployed plug-in files from a destination project (see below) |
 | Build agent | `wpe ba` | HTTP service on a **build machine** for remote `premake` / `build` (see below) |
@@ -212,6 +212,14 @@ Each script should define `main(**kwargs)`. wp-enhanced passes at least:
 - `plugin_name` — plug-in name  
 
 Additional keys depend on the command (e.g. build passes `platforms`, `configuration`).
+
+**Hooks in `wpe FP`:** output of every hook goes to its own log file (`Output/wpe_logs/full_pack_<timestamp>/hook_<name>.log`); `input()` prompts are still shown on the terminal (the progress dashboard pauses while waiting for the answer). A hook can declare that it may run in parallel with the local builds:
+
+```python
+WPE_PARALLEL_WITH = ['build']
+```
+
+Such a hook starts in the background together with the platform builds (after any regular hooks before them, e.g. `pre_build`), and is waited for before the next non-build step (e.g. `post_build`, `pack`). Only `build` is supported for now; the template `pre_full_pack.py` (remote iOS build) uses it.
 
 **Run a hook without running the parent command:** use `wpe run-hook` (alias `wpe rh`) with the hook module name (e.g. `pre_premake`, `post_build`, or `pre_premake.py`). Loads `wpe_project.toml` and passes `proj_root`, `plugin_name`, and the same CLI-derived fields as normal hook invocations (`-r`, `-plt`, `-c`, `-f`, `-g`, plus global options such as `-H` / `--with-hooks`). Example:
 

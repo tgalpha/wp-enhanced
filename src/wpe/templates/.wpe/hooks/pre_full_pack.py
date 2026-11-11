@@ -10,6 +10,11 @@ _build_agent_host = '' # YOUR_BUILD_AGENT_HOST_HERE
 _build_agent_account = '' # YOUR_BUILD_AGENT_ACCOUNT_HERE
 _proj_root_on_build_agent = '' # YOUR_PROJECT_ROOT_ON_BUILD_AGENT_HERE
 
+# Let `wpe full-pack` run this hook in the background while the local platforms are being built:
+# the remote iOS build does not touch the local build outputs. The hook starts together with the
+# local builds and is waited for before post_build, so the iOS binaries are in place before packing.
+WPE_PARALLEL_WITH = ['build']
+
 
 def rpc_call(method: str, args: dict):
     logging.info(f'RPC call: {method} with args: {args}')

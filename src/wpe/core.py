@@ -1,6 +1,8 @@
 import logging
+import os
 import os.path as osp
 import glob
+import time
 from typing import Optional
 
 # 3rd party
@@ -167,8 +169,24 @@ def test(args):
     PluginTestRunner.create_platform(session.pathMan).main()
 
 
-@HookProcessor().register('pack')
-def pack(args):
+def _default_jobs() -> int:
+    return max(1, (os.cpu_count() or 1) - 6)
+
+
+def _package_targets(session) -> list[str]:
+    """Targets passed to `wp.py package`, each one producing its own archive(s)."""
+    return ['Common', 'Documentation'] + _filter_supported_platforms(session.projConfig.all_platform_names(),
+                                                                       'package')
+
+
+def _pack(args, runner=None) -> str:
+    """
+    Package plugin and generate bundle, without running hooks. Returns the output directory.
+    The targets are packaged in parallel, each one in its own process with its own log file.
+    `runner`: a `PackageRunner` to use, by default one logging to `Output/wpe_logs/pack_<timestamp>/`.
+    """
+    from wpe.parallel_build import PackageRunner
+
     def _collect_packages(_output_dir):
         util.remove_tree(_output_dir)
         for pkg in glob.iglob(osp.join(session.pathMan.root, f'{session.pathMan.pluginName}*.tar.xz')):
@@ -190,35 +208,100 @@ def pack(args):
 
     plugin_version = f'{version_code}.{build_number}'
     output_dir = osp.join(session.pathMan.distDir, f'{session.pathMan.pluginName}_v{version_code}_Build{build_number}')
-    WpWrapper().package('Common', '-v', plugin_version)
-    WpWrapper().package('Documentation', '-v', plugin_version)
-    for plt in _filter_supported_platforms(session.projConfig.all_platform_names(), 'package'):
-        WpWrapper().package(plt, '-v', plugin_version)
+    if runner is None:
+        log_dir = osp.join(session.pathMan.root, 'Output', 'wpe_logs', f'pack_{time.strftime("%Y%m%d_%H%M%S")}')
+        runner = PackageRunner(session.pathMan.root, log_dir,
+                               max_workers=getattr(args, 'jobs', None) or _default_jobs())
+    runner.run(_package_targets(session), plugin_version)
+    logging.info(f'Packaged all targets in {runner.elapsed:.1f}s')
     WpWrapper().generate_bundle('-v', plugin_version)
     _collect_packages(output_dir)
     _zip_bundle(output_dir)
     logging.info(f'Saved to {output_dir}')
+    return output_dir
 
 
-@HookProcessor().register('full_pack')
+@HookProcessor().register('pack')
+def pack(args):
+    _pack(args)
+
+
 def full_pack(args):
+    """
+    Build all platforms (in parallel) and pack. Hooks (pre/post full_pack, build, pack) are run
+    by this function itself so that each of them gets its own log file and progress row.
+    The terminal only shows the progress dashboard and the final summary.
+    """
+    from wpe.parallel_build import (FullPackDashboard, PlatformBuildJob, PipelineStep, StepFailed,
+                                    PARALLELIZABLE_STEP_KINDS, run_pipeline)
+
+    total_start = time.perf_counter()
     session = Session.get(args)
     hook_processor = HookProcessor()
     args.configuration = 'Release'
     args.platforms = session.projConfig.all_platform_names()
-    hook_processor.process_pre_hook('build')
-    for plt in _filter_supported_targets(session.targetPlatforms, 'build'):
-        build_args = [plt.platform, '-c', 'Release', '-x'] + plt.architectures
-        if plt.need_toolset():
-            build_args.extend(['-t', plt.toolset()])
-        WpWrapper().build(*build_args)
-        if plt.is_authoring():
-            continue
-        for build_config in ('Profile', 'Debug'):
-            build_args[2] = build_config
-            WpWrapper().build(*build_args)
-    hook_processor.process_post_hook('build')
-    pack(args)
+    max_jobs = max(1, getattr(args, 'jobs', None) or _default_jobs())
+    log_dir = osp.join(session.pathMan.root, 'Output', 'wpe_logs',
+                       f'full_pack_{time.strftime("%Y%m%d_%H%M%S")}')
+
+    dashboard = FullPackDashboard(log_dir)
+    error: Optional[StepFailed] = None
+    try:
+        with dashboard:
+            def hook_step(phase, command):
+                name = f'{phase}_{command}'
+                if not hook_processor.will_execute(phase, command):
+                    return PipelineStep('hook', None, lambda: None)
+                parallel_with = hook_processor.parallel_with(phase, command)
+                ignored = parallel_with - set(PARALLELIZABLE_STEP_KINDS)
+                if ignored:
+                    logging.warning(f'{name}: WPE_PARALLEL_WITH {sorted(ignored)} ignored, full-pack only supports '
+                                    f'{list(PARALLELIZABLE_STEP_KINDS)}.')
+                parallel_with = frozenset(parallel_with - ignored)
+                waiting = f'[dim]waiting (∥ {", ".join(sorted(parallel_with))})' if parallel_with else None
+                row = dashboard.add_step(name, 'hook', f'hook_{name}.log', waiting_status=waiting)
+                hook = getattr(hook_processor, f'process_{phase}_hook')
+                return PipelineStep('hook', row, lambda: hook(command), parallel_with)
+
+            # Declare all rows first, so the whole pipeline is visible from the start.
+            steps = [hook_step('pre', 'full_pack'), hook_step('pre', 'build')]
+            supported = _wp_supported_platforms('build')
+            jobs = []
+            unsupported = []
+            for plt in session.targetPlatforms:
+                if plt.platform not in supported:
+                    unsupported.append(plt.platform)
+                    continue
+                build_args = [plt.platform, '-c', '{config}', '-x'] + plt.architectures
+                if plt.need_toolset():
+                    build_args.extend(['-t', plt.toolset()])
+                configs = ['Release'] if plt.is_authoring() else ['Release', 'Profile', 'Debug']
+                job = PlatformBuildJob(plt.platform, build_args, configs)
+                dashboard.add_build(job)
+                jobs.append(job)
+            for name in unsupported:
+                dashboard.add_unsupported(name)
+            steps.append(PipelineStep(
+                'build', None, lambda: dashboard.run_builds(jobs, cwd=session.pathMan.root, max_workers=max_jobs)))
+            steps += [hook_step('post', 'build'), hook_step('pre', 'pack')]
+
+            pack_row = dashboard.add_pack(_package_targets(session))
+
+            def pack_step():
+                runner = dashboard.package_runner(pack_row, cwd=session.pathMan.root, max_workers=max_jobs)
+                dashboard.extraInfo.append(('Package', _pack(args, runner)))
+            steps.append(PipelineStep('pack', pack_row, pack_step))
+            steps += [hook_step('post', 'pack'), hook_step('post', 'full_pack')]
+
+            try:
+                run_pipeline(dashboard, steps)
+            except StepFailed as e:
+                error = e
+        dashboard.print_summary(time.perf_counter() - total_start)
+    finally:
+        dashboard.close()
+    if error:
+        raise SystemExit(f'full-pack failed: {error}. Logs: {log_dir}')
 
 
 @HookProcessor().register('bump')

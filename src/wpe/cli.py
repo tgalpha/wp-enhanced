@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 from wpe import core
@@ -231,7 +232,17 @@ def add_pack_parser(subparsers):
     subparser = subparsers.add_parser(
         'pack',
         aliases=['P'],
-        description='Package plugin.'
+        description='Package plugin. Targets (Common, Documentation, platforms) are packaged in parallel; '
+                    'logs are saved to `Output/wpe_logs/` of the plugin project.'
+    )
+    subparser.add_argument(
+        '-j',
+        '--jobs',
+        type=int,
+        dest='jobs',
+        default=max(1, (os.cpu_count() or 1) - 6),
+        required=False,
+        help='Max number of targets to package in parallel. Default: CPU core count - 6 (at least 1).'
     )
     subparser.set_defaults(func=core.pack)
 
@@ -240,7 +251,18 @@ def add_full_pack_parser(subparsers):
     subparser = subparsers.add_parser(
         'full-pack',
         aliases=['FP'],
-        description='Build for all platform and pack.'
+        description='Build for all platform and pack. Platforms are built in parallel; '
+                    'configurations of the same platform are built sequentially. '
+                    'Build logs are saved to `Output/wpe_logs/` of the plugin project.'
+    )
+    subparser.add_argument(
+        '-j',
+        '--jobs',
+        type=int,
+        dest='jobs',
+        default=max(1, (os.cpu_count() or 1) - 6),
+        required=False,
+        help='Max number of platforms to build / targets to package in parallel. Default: CPU core count - 6 (at least 1). Use 1 to build platforms one by one.'
     )
     subparser.set_defaults(func=core.full_pack)
 

@@ -22,6 +22,7 @@ Flask = "^3.0.3"
 werkzeug = "3.0.3"
 packaging = "24.1"
 toml = "^0.10.2"
+rich = "^13.0"
 
 
 [tool.poetry.scripts]
